@@ -1,6 +1,6 @@
 // main.c, 159
 // OS phase 1
-//
+// Hi!
 // Team Name: ??????? (Members: ??????...)
 
 #include "k-include.h"  // SPEDE includes
