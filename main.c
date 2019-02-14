@@ -75,6 +75,6 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       	NewProcSR(UserProc);     // create a UserProc
    }
    Scheduler();    // may need to pick another proc
-   Loader(...)
+   Loader(pcb[run_pid].trapframe_p);
 }
 
