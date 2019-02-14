@@ -73,9 +73,8 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 	  }
       if (ch == 'n')                      // 'n' for new process
       	NewProcSR(UserProc);     // create a UserProc
-     }
    }
-   call Scheduler()    // may need to pick another proc
-   call Loader(...)
+   Scheduler();    // may need to pick another proc
+   Loader(...)
 }
 
