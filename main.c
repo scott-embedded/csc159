@@ -20,13 +20,16 @@ struct i386_gate *intr_table;    // intr table's DRAM location
 void InitKernelData(void) {         // init kernel data
    int i;
       
-   ... = get_idt_base();            // get intr table location
+   intr_table = get_idt_base();            // get intr table location SOH
 
-   Bzero(...);                      // clear 2 queues
-   Bzero(...);
-   for(i=...                        // put all PID's to pid queue
+   Bzero((char*)&pid_q));                      // clear 2 queues SOH
+   Bzero((char*)&ready_q);
+   
+   for (i = 0; i < (sizeof(pid_q) / sizeof(pid_q[0]); i++) {      // put all PID's to pid queue SOH (NOT SURE ON THIS..)
+     pid_q[i] = ready_q[i];
+   }
 
-   set run_pid to NONE
+   run_pid = NONE; 		//set run_pid to NONE SOH
 
 void InitKernelControl(void) {      // init kernel control
    fill_gate(...);                  // fill out intr table for timer
@@ -46,9 +49,10 @@ void Scheduler(void) {      // choose run_pid
    ... ;                    // upgrade its state to run
 }
 
-int main(void) {                          // OS bootstraps
-   call to initialize kernel data
-   call to initialize kernel control
+int main(void) {    
+	                      // OS bootstraps
+   InitKernelData();		//call to initialize kernel data
+   InitKernelControl();		//call to initialize kernel control
 
    call NewProcSR(InitProc) to create it  // create InitProc
    call Scheduler()
@@ -60,21 +64,21 @@ int main(void) {                          // OS bootstraps
 void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    char ch;
 
-   pcb[run_pid].trapframe_p = trapframe_p; // save it
+   pcb[run_pid].trapframe_p = trapframe_p; // save it SOH
 
    call TimerSR();                     // handle timer intr
 
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
-   if (cons_kbhit() {            // check if keyboard pressed
+   if (cons_kbhit() {            // check if keyboard pressed SOH
       ch = cons_getchar();
-      if (ch == 'b') {                  // 'b' for breakpoint
-		 breakpoint();  		// let's go to GDB 
-         break;	//not sure why he breaks here
+      if (ch == 'b') {                  // 'b' for breakpoint SOH
+		 breakpoint();  		// let's go to GDB SOH
+         break;	//not sure why he breaks here SOH
 	  }
-      if (ch == 'n')                      // 'n' for new process
-      	NewProcSR(UserProc);     // create a UserProc
+      if (ch == 'n')                      // 'n' for new process SOH
+      	NewProcSR(UserProc);     // create a UserProc SOH
    }
-   Scheduler();    // may need to pick another proc
-   Loader(pcb[run_pid].trapframe_p);
+   Scheduler();    // may need to pick another proc SOH
+   Loader(pcb[run_pid].trapframe_p); //SOH
 }
 
