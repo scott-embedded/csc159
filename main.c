@@ -60,17 +60,19 @@ int main(void) {                          // OS bootstraps
 void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    char ch;
 
-   pcb[...].trapframe_p = trapframe_p; // save it
+   pcb[run_pid].trapframe_p = trapframe_p; // save it
 
    call TimerSR();                     // handle timer intr
 
-   if KB of PC is pressed {            // check if keyboard pressed
-      read the key
-      if it's 'b':                     // 'b' for breakpoint
-         ...                           // let's go to GDB
-         break;
-      if it's 'n':                     // 'n' for new process
-         call NewProcSR(UserProc);     // create a UserProc
+   //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
+   if (cons_kbhit() {            // check if keyboard pressed
+      ch = cons_getchar();
+      if (ch == 'b') {                  // 'b' for breakpoint
+		 breakpoint();  		// let's go to GDB 
+         break;	//not sure why he breaks here
+	  }
+      if (ch == 'n')                      // 'n' for new process
+      	NewProcSR(UserProc);     // create a UserProc
      }
    }
    call Scheduler()    // may need to pick another proc
