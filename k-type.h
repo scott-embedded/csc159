@@ -17,15 +17,21 @@ typedef struct {
 } trapframe_t;
 
 typedef struct {
-   ...                       // read in 1.html
-   ...
-   ...
-   ...
+   //NMA 
+  state_t state;       // read in 1.html
+  int run_count;
+  int total_count;
+  trapframe_t *trapframe_p;            
+   
 } pcb_t;                     
 
 typedef struct {             // generic queue type
-  ...                        // for a simple queue
-  ...  
+   //NMA
+   state_t state;
+   int pid;                       // for a simple queue
+   
+ 
 } q_t;
+
 
 #endif
