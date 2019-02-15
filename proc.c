@@ -7,33 +7,35 @@
 
 void Delay(void) {  // delay CPU for half second by 'inb $0x80'
    int i;
-   for...  // loop to try to delay CPU for about half second
+   for (i = 0; i < loop/2; i++)
+	   asm("inb $0x80");
 }
 
 void ShowChar(int row, int col, char ch) { // show ch at row, col
-   unsigned short *p = ...   // upper-left corner of display
-   ...
-   ...
-   ...
+   unsigned short *p = VID_HOME;
+   
+   p += row * 80 + col;
+   *p = ch + VID_MASK;
 }
 
 void InitProc(void) {
    while(1) {
-      show a dot at upper left corner on PC
-      wait for about half second
+      ShowChar(0, 0, '.'):
+      Delay();
 
-      erase dot
-      wait for about half second
+      ShowChar(0, 0, ' '):
+      Delay();
    }
 }
 
 void UserProc(void) {
    while(1) {
-      show 1st digit of my PID at row run_pid+1, 1st col
-      show 2nd digit of my PID at row run_pid+1, 2nd col
-      wait for about half second
+      ShowChar(run_pid, 0, run_pid / 10 + '0');
+      ShowChar(run_pid, 1, run_pid % 10 + '0');
+      Delay();
 
-      erase above writing (one digit at a time)
-      wait for about half second
+      ShowChar(run_pid, 0, ' ');
+      ShowChar(run_pid, 1, ' ');
+      Delay();
    }
 }
