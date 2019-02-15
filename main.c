@@ -51,12 +51,14 @@ void Scheduler(void) {      // choose run_pid
 }
 
 int main(void) {                          // OS bootstraps
-   call to initialize kernel data
-   call to initialize kernel control
-
-   call NewProcSR(InitProc) to create it  // create InitProc
-   call Scheduler()
-   call Loader(pcb[run_pid].trapframe_p); // load/run it
+    //NMA
+   //call to initialize kernel data
+   InitkernelData();
+   //call to initialize kernel control
+   InitkernelControl();
+   NewProcSR(InitProc);  // create InitProc
+   Scheduler();
+   Loader(pcb[run_pid].trapframe_p); // load/run it
 
    return 0; // statement never reached, compiler asks it for syntax
 }
@@ -66,7 +68,7 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 
    pcb[run_pid].trapframe_p = trapframe_p; // save it
 
-   call TimerSR();                     // handle timer intr
+   TimerSR();                     // handle timer intr
 
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
    if (cons_kbhit() {            // check if keyboard pressed
@@ -79,6 +81,6 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       	NewProcSR(UserProc);     // create a UserProc
    }
    Scheduler();    // may need to pick another proc
-   Loader(...)
+   Loader(pcb[run_pid].trapframe_p);
 }
 
