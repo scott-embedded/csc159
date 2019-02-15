@@ -27,11 +27,8 @@ typedef struct {
 
 typedef struct {             // generic queue type
    //NMA
-   state_t state;
-   int pid;                       // for a simple queue
-   
- 
+   int q[Q_SIZE];               // for a simple queue
+   int tail;                     
 } q_t;
-
 
 #endif
