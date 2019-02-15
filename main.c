@@ -1,7 +1,7 @@
 // main.c, 159
 // OS phase 1
 // Hi!
-// Team Name: ??????? (Members: ??????...)
+// Team Name: Katana (Members: )
 
 #include "k-include.h"  // SPEDE includes
 #include "k-entry.h"    // entries to kernel (TimerEntry, etc.)
@@ -34,7 +34,11 @@ void InitKernelControl(void) {      // init kernel control
 }
 
 void Scheduler(void) {      // choose run_pid
-   if run_pid is greater than 0, just return; // OK/picked
+   //if run_pid is greater than 0, just return; // OK/picked
+   if (run_pid > 0)   
+   {
+	   return; 
+   }
 
    if ready_q is empty:
       pick 0 as run_pid     // pick InitProc
@@ -42,8 +46,8 @@ void Scheduler(void) {      // choose run_pid
       change state of PID 0 to ready
       dequeue ready_q to set run_pid
 
-   ... ;                    // reset run_count of selected proc
-   ... ;                    // upgrade its state to run
+   pcb[run_pid].run_count = 0;          // reset run_count of selected proc
+   pcb[run_pid].stat = RUN;            // upgrade its state to run
 }
 
 int main(void) {                          // OS bootstraps
