@@ -9,7 +9,7 @@
 
 // load proc trapframe to run it
 ENTRY(Loader)
-   copy 4 bytes from 4B above esp to ebx
+   //copy 4 bytes from 4B above esp to ebx SOH
    copy ebx to esp (point esp to process trapframe)
    pop all (8) registers
    return from interrupt

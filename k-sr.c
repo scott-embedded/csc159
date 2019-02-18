@@ -32,7 +32,7 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
 
 // count run_count and switch if hitting time slice
 void TimerSR(void) {
-   outportb(...                              // notify PIC timer done
+   outportb(PIC_CONTROL, TIMER_DONE);                              // notify PIC timer done SOH
 
    pcb[run_pid].run_count++;
    pcb[run_pid].total_count++;

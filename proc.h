@@ -1,7 +1,7 @@
 // proc.h, 159
 
-#if..
-#de...
+#ifndef __PROC__	//SOH
+#define __PROC__
 
 ...  // prototype those in proc.c here
 ...

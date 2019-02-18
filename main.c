@@ -25,7 +25,7 @@ void InitKernelData(void) {         // init kernel data
    Bzero((char*)&pid_q));                      // clear 2 queues SOH
    Bzero((char*)&ready_q);
    
-   for(i = 0; i < PROC_SIZE; i++)
+   for (i = 0; i < PROC_SIZE; i++)
 	   EnQ(i, &pid_q);
 
    run_pid = NONE; 		//set run_pid to NONE SOH
@@ -38,7 +38,7 @@ void InitKernelControl(void) {      // init kernel control
 void Scheduler(void) {      // choose run_pid
    if (run_pid > 0)					//run_pid is greater than 0, just return; // OK/picked
      return;
-   if (ready_q.tail == 0) is empty:	//SOH
+   if (QisEmpty(&ready_q)) //is empty:	//SOH
       run_pid = 0;    // pick InitProc SOH
    else {
       pcb[0].state = READY;  //change state of PID 0 to ready SOH
@@ -50,7 +50,7 @@ void Scheduler(void) {      // choose run_pid
 }
 
 int main(void) {    
-	                      // OS bootstraps
+	                      	// OS bootstraps
    InitKernelData();		//call to initialize kernel data
    InitKernelControl();		//call to initialize kernel control
 
