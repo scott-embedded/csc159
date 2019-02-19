@@ -1,7 +1,7 @@
 // main.c, 159
 // OS phase 1
 // Hi!
-// Team Name: ??????? (Members: ??????...)
+// Team Name: Katana (Members: Nora Ali, Scott O'Hair)
 
 #include "k-include.h"  // SPEDE includes
 #include "k-entry.h"    // entries to kernel (TimerEntry, etc.)

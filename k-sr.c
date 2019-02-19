@@ -20,11 +20,12 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
    Bzero((char *)&pcb[pid]);
    Bzero((char *)&proc_stack[pid][0]);
    pcb[pid].state = READY;
-   if(pid > 0)EnQ(pid, &ready_q);
+   
+   if(pid > 0)
+	   EnQ(pid, &ready_q);
 
 // point trapframe_p to stack & fill it out
-   pcb[pid]trapframe_p = (trapframe_t *)
-      &proc_statck[pid][PROC_STACK_SIZE - sizeof(trapframe_t)):
+   pcb[pid]trapframe_p = (trapframe_t *)&proc_statck[pid][PROC_STACK_SIZE - sizeof(trapframe_t)):
    pcb[pid]trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
    pcb[pid]trapframe_p->cs = get_cs();                  // dupl from CPU
    pcb[pid]trapframe_p->eip = p;                        // set to code
