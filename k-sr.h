@@ -1,11 +1,11 @@
 // k-sr.h, 159
 
-#ifndef ...
-#define ...
+#ifndef __K_SR__
+#define __K_SR__
 
-#include ...
+#include "k-type.h"
 
-...  // prototype those in k-sr.c here
-...
+void NewProcSR(func_p_t);  // prototype those in k-sr.c here
+void TimerSR(void);
 
 #endif

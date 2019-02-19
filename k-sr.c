@@ -13,35 +13,34 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
 
    if( pid_q is empty ) {     // may occur if too many been created
       cons_printf("Panic: no more process!\n");
-      ...                     // cannot continue, alternative: breakpoint();
+      breakpoint();                     // cannot continue, alternative: breakpoint();
    }
 
-   ...                                       // alloc PID (1st is 0)
-   ...                                       // clear PCB
-   ...                                       // clear stack
-   ...                                       // change process state
-
-   if(pid > 0) ...                           // queue to ready_q if > 0
+   pid = DeQ(&pid_q);
+   Bzero((char *)&pcb[pid]);
+   Bzero((char *)&proc_stack[pid][0]);
+   pcb[pid].state = READY;
+   
+   if(pid > 0)
+	   EnQ(pid, &ready_q);
 
 // point trapframe_p to stack & fill it out
-   pcb[...].trapframe_p = ...                // point to stack top
-   pcb[...].trapframe_p--;                   // lower by trapframe size
-   pcb[...].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
-   pcb[...].trapframe_p->cs = get_cs();                  // dupl from CPU
-   pcb[...].trapframe_p->eip =                           // set to code
+   pcb[pid]trapframe_p = (trapframe_t *)&proc_statck[pid][PROC_STACK_SIZE - sizeof(trapframe_t)):
+   pcb[pid]trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
+   pcb[pid]trapframe_p->cs = get_cs();                  // dupl from CPU
+   pcb[pid]trapframe_p->eip = p;                        // set to code
 }
 
 // count run_count and switch if hitting time slice
 void TimerSR(void) {
-   outportb(...                              // notify PIC timer done
+   outportb(PIC_CONTROL, TIMER_DONE);                              // notify PIC timer done SOH
 
-   ...                                       // count up run_count
-   ...                                       // count up total_count
+   pcb[run_pid].run_count++;
+   pcb[run_pid].total_count++;
 
-   if(...                          ) {       // if runs long enough
-      ...                                    // move it to ready_q
-      ...                                    // change its state
-      ...                                    // running proc = NONE
+   if(pcb[run_pid].run_count == TIME_SLICE) {
+      pcb[run_pid].state = READY;
+      EnQ(run_pid, &ready_pid);
+      run_pid = NONE;
    }
 }
-

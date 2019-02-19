@@ -1,7 +1,7 @@
 // main.c, 159
 // OS phase 1
 // Hi!
-// Team Name: ??????? (Members: ??????...)
+// Team Name: Katana (Members: Nora Ali, Scott O'Hair)
 
 #include "k-include.h"  // SPEDE includes
 #include "k-entry.h"    // entries to kernel (TimerEntry, etc.)
@@ -20,39 +20,43 @@ struct i386_gate *intr_table;    // intr table's DRAM location
 void InitKernelData(void) {         // init kernel data
    int i;
       
-   ... = get_idt_base();            // get intr table location
+   intr_table = get_idt_base();            // get intr table location SOH
 
-   Bzero(...);                      // clear 2 queues
-   Bzero(...);
-   for(i=...                        // put all PID's to pid queue
+   Bzero((char*)&pid_q));                      // clear 2 queues SOH
+   Bzero((char*)&ready_q);
+   
+   for (i = 0; i < PROC_SIZE; i++)
+	   EnQ(i, &pid_q);
 
-   set run_pid to NONE
+   run_pid = NONE; 		//set run_pid to NONE SOH
 
 void InitKernelControl(void) {      // init kernel control
-   fill_gate(...);                  // fill out intr table for timer
-   outportb(...);                   // mask out PIC for timer
+   fill_gate(&intr_table[TIMER_INTR], (int)TimerEntry, get_cs(), ACC_INTR_GATE, 0); // fill out intr table for timer SOH (INCOMPLETE, lookup in book) SOH
+   outportb(PIC_MASK, MASK);                   // mask out PIC for timer SOH
 }
 
 void Scheduler(void) {      // choose run_pid
-   if run_pid is greater than 0, just return; // OK/picked
+   if (run_pid > 0)					//run_pid is greater than 0, just return; // OK/picked
+     return;
+   if (QisEmpty(&ready_q)) //is empty:	//SOH
+      run_pid = 0;    // pick InitProc SOH
+   else {
+      pcb[0].state = READY;  //change state of PID 0 to ready SOH
+      run_pid = DeQ(&ready_q);		//dequeue ready_q to set run_pid
+  }
 
-   if ready_q is empty:
-      pick 0 as run_pid     // pick InitProc
-   else:
-      change state of PID 0 to ready
-      dequeue ready_q to set run_pid
-
-   ... ;                    // reset run_count of selected proc
-   ... ;                    // upgrade its state to run
+   pcb[run_pid].run_count = 0;                  // reset run_count of selected proc
+   pcb[run_pid].state = RUN;                    // upgrade its state to run
 }
 
-int main(void) {                          // OS bootstraps
-   call to initialize kernel data
-   call to initialize kernel control
+int main(void) {    
+	                      	// OS bootstraps
+   InitKernelData();		//call to initialize kernel data
+   InitKernelControl();		//call to initialize kernel control
 
-   call NewProcSR(InitProc) to create it  // create InitProc
-   call Scheduler()
-   call Loader(pcb[run_pid].trapframe_p); // load/run it
+   NewProcSR(InitProc)  // create InitProc
+   Scheduler();
+   Loader(pcb[run_pid].trapframe_p); // load/run it
 
    return 0; // statement never reached, compiler asks it for syntax
 }
@@ -60,21 +64,21 @@ int main(void) {                          // OS bootstraps
 void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    char ch;
 
-   pcb[run_pid].trapframe_p = trapframe_p; // save it
+   pcb[run_pid].trapframe_p = trapframe_p; // save it SOH
 
-   call TimerSR();                     // handle timer intr
+   TimerSR();                     // handle timer intr
 
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
-   if (cons_kbhit() {            // check if keyboard pressed
+   if (cons_kbhit() {            // check if keyboard pressed SOH
       ch = cons_getchar();
-      if (ch == 'b') {                  // 'b' for breakpoint
-		 breakpoint();  		// let's go to GDB 
-         break;	//not sure why he breaks here
+      if (ch == 'b') {                  // 'b' for breakpoint SOH
+		 breakpoint();  		// let's go to GDB SOH
+         break;	//not sure why he breaks here SOH
 	  }
-      if (ch == 'n')                      // 'n' for new process
-      	NewProcSR(UserProc);     // create a UserProc
+      if (ch == 'n')                      // 'n' for new process SOH
+      	NewProcSR(UserProc);     // create a UserProc SOH
    }
-   Scheduler();    // may need to pick another proc
-   Loader(...)
+   Scheduler();    // may need to pick another proc SOH
+   Loader(pcb[run_pid].trapframe_p); //SOH
 }
 

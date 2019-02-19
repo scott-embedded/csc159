@@ -1,9 +1,11 @@
 // proc.h, 159
 
-#if..
-#de...
+#ifndef __PROC__	//SOH
+#define __PROC__
 
-...  // prototype those in proc.c here
-...
+void Delay(void);  // prototype those in proc.c here
+void ShowChar(int, int, char);
+void InitProc(void);
+void UserProc(void);
 
-#en...
+#endif
