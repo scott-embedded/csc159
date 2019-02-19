@@ -4,7 +4,8 @@
 #include <spede/machine/asmacros.h> // do not use/include "spede.h"
 #define K_STACK_SIZE (PROC_STACK_SIZE * 8) // kernel has 32KB stack
 
-.comm k_stack, K_STACK_SIZE, 1      // declare kernel stack space (16K x 1B)
+//.comm k_stack, K_STACK_SIZE, 1      // declare kernel stack space (16K x 1B)
+.comm k_stack, 32768, 1
 .text
 
 // load proc trapframe to run it
@@ -23,8 +24,9 @@ ENTRY(TimerEntry)                  // will have efl, cs, eip pushed by hardware
    movw $0x10, %ax                 // set kernel data segment registers
    mov %ax, %ds                    // set kernel data segment registers
    mov %ax, %es                    // set kernel data segment registers
-   leal k_stack + K_STACK_SIZE, %esp  // set esp to top of kernel stack
-   push %ebx     // (onto the kernel stack)
+   leal k_stack + $32768, %esp    // K_STACK_SIZE, %esp  // set esp to top of kernel stack
+   pushl %ebx     // (onto the kernel stack)
    cld               //clear the direction flag of efl
-   Kernel();  //not sure how to call this, or what paramenter   //call C function Kernel
+     //call C function Kernel
+   call CNAME(Kernel)
 
