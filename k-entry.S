@@ -22,6 +22,8 @@ ENTRY(ShowCharEntry)  //CODING HINTS NMA
     jmp PreKernel     
 
 ENTRY(SleepEntry) //CODING HINTS NMA
+    pushl $SLEEP_CALL
+    jmp PreKernel
      
 
 
