@@ -3,6 +3,16 @@
 #ifndef __K_CONST__
 #define __K_CONST__
 
+
+//START CODING HINTS NMA
+
+
+#define GETPID_CALL 48
+#define SHOWCHAR_CALL 49
+#define SLEEP_CALL 50
+
+//END OF CODING HINTS
+
 #define NONE -1             // used when none
 #define TIMER_INTR 32       // TIMER INTR constant identifier
 #define PIC_MASK 0x21       // Programmable Interrupt Controller I/O
