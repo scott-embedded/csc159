@@ -37,8 +37,6 @@ void InitKernelData(void) {         // init kernel data
 }
 
 void InitKernelControl(void) {      // init kernel control
-   //CODING HINTS NMA
-   
 
    fill_gate(&intr_table[TIMER_INTR], (int)TimerEntry, get_cs(), ACC_INTR_GATE, 0); //fill out intr table for timer
    outportb(PIC_MASK, MASK);                   // mask out PIC for timer
@@ -74,7 +72,11 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    char ch;
 
    pcb[run_pid].trapframe_p = trapframe_p; // save it
+   switch(trapframe_p->entry_id){
+      case SLEEP_CALL:
+         SleepSr(trapframe->eax);
 
+   }
    TimerSR();                     // handle timer intr
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
    if (cons_kbhit()) {            // check if keyboard pressed

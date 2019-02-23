@@ -6,7 +6,7 @@ ENTRY(Loader) // loads proc trapframe to run it
    movl 4(%esp), %ebx
    movl %ebx, %esp
    popa
-   incr esp by 4 (add $4 to %esp -- skip 'entry_id' in trapframe) <-- !!!
+   add $4, %esp                 // incr esp by 4 (add $4 to %esp -- skip 'entry_id' in trapframe) <-- !!!
    iret
 
 ENTRY(TimerEntry)
@@ -17,7 +17,13 @@ ENTRY(GetPidEntry)
    pushl $GETPIDCALL
    jmp PreKernel
 
-... add two more entries like above...
+ENTRY(ShowCharEntry)  //CODING HINTS NMA
+    pushl $SHOWCHARCALL
+    jmp PreKernel     
+
+ENTRY(SleepEntry) //CODING HINTS NMA
+     
+
 
 PreKernel: // build rest of trapframe, switch stack, pass arg, call Kernel
    pusha   // push all: eax ecx edx ebx esp ebp esi edi

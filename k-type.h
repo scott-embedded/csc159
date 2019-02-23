@@ -17,7 +17,7 @@ typedef struct {
    unsigned int efl;
 
    //CODING HINTS NMA
-   unsigned int edi
+   unsigned int edi; 
    unsigned int esi;
    unsigned int ebp;
    unsigned int esp;
