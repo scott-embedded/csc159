@@ -1,6 +1,11 @@
 // k-entry.S
+#include "k-const.h"
+#include <spede/machine/asmacros.h>
+#define K_STACK_SIZE (PROC_STACK_SIZE * 8)
 
-... same as before here ...
+.comm k_stack, K_STACK_SIZE, 1
+.text
+
 
 ENTRY(Loader) // loads proc trapframe to run it
    movl 4(%esp), %ebx

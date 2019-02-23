@@ -42,7 +42,7 @@ void TimerSR(void) {
 
    if(pcb[run_pid].run_count == TIME_SLICE) {
       pcb[run_pid].state = READY;
-      EnQ(run_pid, &ready_pid);
+      EnQ(run_pid, &ready_q);
       run_pid = NONE;
    }
    if(!QisEmpty(&sleep_q){
