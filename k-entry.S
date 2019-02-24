@@ -1,11 +1,10 @@
-// k-entry.S
+// k-entry.S, entries to kernel services, build process trapframe
 #include "k-const.h"
 #include <spede/machine/asmacros.h>
 #define K_STACK_SIZE (PROC_STACK_SIZE * 8)
 
 .comm k_stack, K_STACK_SIZE, 1
 .text
-
 
 ENTRY(Loader) // loads proc trapframe to run it
    movl 4(%esp), %ebx
@@ -19,14 +18,14 @@ ENTRY(TimerEntry)
    jmp PreKernel
 
 ENTRY(GetPidEntry)
-   pushl $GETPIDCALL
+   pushl $GETPID_CALL
    jmp PreKernel
 
-ENTRY(ShowCharEntry)  //CODING HINTS NMA
-    pushl $SHOWCHARCALL
+ENTRY(ShowCharEntry)
+    pushl $SHOWCHAR_CALL
     jmp PreKernel     
 
-ENTRY(SleepEntry) //CODING HINTS NMA
+ENTRY(SleepEntry)
     pushl $SLEEP_CALL
     jmp PreKernel
      
@@ -42,3 +41,5 @@ PreKernel: // build rest of trapframe, switch stack, pass arg, call Kernel
    pushl %ebx               // push (proc TF addr) there
    cld                      // clear direction flag bit
    call CNAME(Kernel)       // call Kernel code
+
+
