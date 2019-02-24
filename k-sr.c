@@ -25,7 +25,7 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
 	   EnQ(pid, &ready_q);
 
 // point trapframe_p to stack & fill it out
-   pcb[pid]trapframe_p = (trapframe_t *)&proc_statck[pid][PROC_STACK_SIZE - sizeof(trapframe_t)):
+   pcb[pid]trapframe_p = (trapframe_t *)&proc_statck[pid][PROC_STACK_SIZE - sizeof(trapframe_t)];
    pcb[pid]trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
    pcb[pid]trapframe_p->cs = get_cs();                  // dupl from CPU
    pcb[pid]trapframe_p->eip = p;                        // set to code
@@ -45,7 +45,8 @@ void TimerSR(void) {
       EnQ(run_pid, &ready_q);
       run_pid = NONE;
    }
-   if(!QisEmpty(&sleep_q){
+
+   if(!QisEmpty(&sleep_q)){
     for(i=0; i< sleep_q.tail; i++){
        proc = Deq(&sleep_q);
        if(pcb[proc].wake_centi_sec <= sys_centi_sec){
@@ -54,9 +55,10 @@ void TimerSR(void) {
        }
        else{
          Enq(proc, &sleep_q);
-       }
+      } 
     }
    }
+}
 int GetPidSr(void){
   return run_pid;
 }

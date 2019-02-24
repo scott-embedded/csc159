@@ -39,9 +39,9 @@ void InitKernelData(void) {         // init kernel data
 void InitKernelControl(void) {      // init kernel control
 
    fill_gate(&intr_table[TIMER_INTR], (int)TimerEntry, get_cs(), ACC_INTR_GATE, 0); //fill out intr table for timer
-   fill_gate(&intr_table[GETPID_CALL], (int)GetPidEntry), get_cs(), ACC_INTR_GATE, 0);
-   fill_gate(&intr_table[SHOWCHAR_CALL], (int)ShowCharEntry), get_cs(), ACC_INTR_GATE, 0);
-   fill_gate(&intr_table[SLEEP_CALL], (int)SleepEntry), get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[GETPID_CALL], (int)GetPidEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[SHOWCHAR_CALL], (int)ShowCharEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[SLEEP_CALL], (int)SleepEntry, get_cs(), ACC_INTR_GATE, 0);
    outportb(PIC_MASK, MASK);                   // mask out PIC for timer
 }
 
