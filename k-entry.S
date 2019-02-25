@@ -23,9 +23,11 @@ ENTRY(GetPidEntry)
 ENTRY(ShowCharEntry)
    pushl $SHOWCHAR_CALL
    jmp PreKernel
+
 ENTRY(SleepEntry)
    pushl $SLEEP_CALL
-   jmp PreKernel  
+   jmp PreKernel
+
 PreKernel:
    pusha
    movl %esp, %ebx
