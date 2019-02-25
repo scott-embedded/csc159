@@ -4,18 +4,22 @@
 
 .comm k_stack, K_STACK_SIZE, 1
 .text
+
 ENTRY(Loader)
    movl 4(%esp), %ebx
    movl %ebx, %esp
    popa
    add $4, %esp
    iret
+
 ENTRY(TimerEntry)
    pushl $TIMER_INTR
    jmp PreKernel
+
 ENTRY(GetPidEntry)
    pushl $GETPID_CALL
    jmp PreKernel
+
 ENTRY(ShowCharEntry)
    pushl $SHOWCHAR_CALL
    jmp PreKernel

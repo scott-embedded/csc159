@@ -11,7 +11,7 @@
 void NewProcSR(func_p_t p) {  // arg: where process code starts
    int pid;
 
-   if(QisEmpty($pid_q)) {     // may occur if too many been created
+   if(QisEmpty(&pid_q)) {     // may occur if too many been created
       cons_printf("Panic: no more process!\n");
       breakpoint();                     // cannot continue, alternative: breakpoint();
    }
