@@ -45,7 +45,7 @@ int DeQ(q_t *p) { // return -1 if q[] is empty
    for(i=0; i < p->tail; i++)
 	   p->q[i] = p->q[i + 1];
    
-   for(i = tail; i < Q_SIZE; i++)
+   for(i = p-> tail; i < Q_SIZE; i++)
 	   p->q[i] = NONE;
    return ret;
 }
@@ -57,7 +57,7 @@ void EnQ(int to_add, q_t *p) {
       return;	//SOH
    }
 
-   p->q[tail] = to_add;	
+   p->q[p->tail] = to_add;	
    p->tail++;
-   p->q[tail] = NONE;
+   p->q[p->tail] = NONE;
 }

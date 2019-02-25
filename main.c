@@ -77,13 +77,13 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    pcb[run_pid].trapframe_p = trapframe_p; // save it
    switch(trapframe_p->entry_id){
       case SLEEP_CALL:
-         SleepSr(trapframe->eax);
+         SleepSr(trapframe_p->eax);
          break;
       case GETPID_CALL:
-         trapfram->eax = GetPidSr();
+         trapframe_p->eax = GetPidSr();
          break;
       case SHOWCHAR_CALL:
-         ShowCharCallSr(trapframe->eax, trapframe->ebx, trapframe->ecx);
+         ShowCharCallSr(trapframe_p->eax, trapframe_p->ebx, trapframe_p->ecx);
          break;
       case TIMER_INTR:
          TimerSR();
