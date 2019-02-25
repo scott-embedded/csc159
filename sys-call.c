@@ -28,13 +28,13 @@ void ShowCharCall(int row, int col, char ch) {
 }
 
 void SleepCall(int centi_sec) {  // # of 1/100 of a second to sleep
-   for(i=0; i<centi_sec/2; i++) asm("inb $0x80");
+  // for(i=0; i<centi_sec/2; i++) asm("inb $0x80");
 
 
       asm("movl %0, %%eax;
            int %1"     // after, copy eax to variable 'pid'
-       :         // output
-       : "g" (centi_sec), "g" (SLEEP_CALL)  // input
-       : "eax"              // used registers
+           :         // output
+           : "g" (centi_sec), "g" (SLEEP_CALL)  // input
+           : "eax"              // used registers
    ); //for now, but please adjust this into more asm 
 }
