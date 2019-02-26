@@ -46,11 +46,11 @@ void InitKernelControl(void) {      // init kernel control
 }
 
 void Scheduler(void) {      // choose run_pid
-   if (run_pid > 0)					//run_pid is greater than 0, just return; // OK/picked
+   if(run_pid> 0)					//run_pid is greater than 0, just return; // OK/picked
      return;
-   if (QisEmpty(&ready_q)) //is empty
+   if(QisEmpty(&ready_q)) //is empty
       run_pid = 0;    // pick InitProc
-   else {
+   else{
       pcb[0].state = READY;  //change state of PID 0 to ready
       run_pid = DeQ(&ready_q);		//dequeue ready_q to set run_pid
   }
@@ -66,6 +66,7 @@ int main(void) {
 
    NewProcSR(InitProc);  // create InitProc
    Scheduler();
+   breakpoint();
    Loader(pcb[run_pid].trapframe_p); // load/run it
    
    return 0; // statement never reached, compiler asks it for syntax

@@ -20,12 +20,13 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
    Bzero((char *)&pcb[pid], sizeof(pcb_t));
    Bzero((char *)&proc_stack[pid][0], PROC_STACK_SIZE);
    pcb[pid].state = READY;
-   
-   if(pid > 0)
+   if(pid > 0){
 	   EnQ(pid, &ready_q);
+   }
 
 // point trapframe_p to stack & fill it out
-   pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE - sizeof(trapframe_t)];
+   pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE];
+   pcb[pid].trapframe_p--;
    pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
    pcb[pid].trapframe_p->cs = get_cs();                  // dupl from CPU
    pcb[pid].trapframe_p->eip = (int)p;                        // set to code
@@ -48,13 +49,13 @@ void TimerSR(void) {
 
    if(!QisEmpty(&sleep_q)){
     for(i=0; i< sleep_q.tail; i++){
-       proc = Deq(&sleep_q);
+       proc = DeQ(&sleep_q);
        if(pcb[proc].wake_centi_sec <= sys_centi_sec){
          pcb[proc].state = READY;
-         Enq(proc, &ready_q);
+         EnQ(proc, &ready_q);
        }
        else{
-         Enq(proc, &sleep_q);
+         EnQ(proc, &sleep_q);
       } 
     }
    }
