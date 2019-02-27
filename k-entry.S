@@ -1,27 +1,41 @@
-// k-entry.S, entries to kernel services, build process trapframe
-
 #include "k-const.h"
-#include <spede/machine/asmacros.h> // do not use/include "spede.h"
-#define K_STACK_SIZE (PROC_STACK_SIZE * 8) // kernel has 32KB stack
+#include <spede/machine/asmacros.h>
+#define K_STACK_SIZE (PROC_STACK_SIZE *8)
 
-.comm k_stack, K_STACK_SIZE, 1      // declare kernel stack space (16K x 1B)
+.comm k_stack, K_STACK_SIZE, 1
 .text
 
 // load proc trapframe to run it
 ENTRY(Loader)
    movl 4(%esp), %ebx // copy 4 bytes from 4B above esp to ebx
    movl %ebx, %esp    // copy ebx to esp (point esp to process trapframe)
-   popa // pop all (8) registers
-   iret // return from interrupt
+   popa               // pop all (8) registers
+   addl $4, %esp      // skip 4 bytes
+   iret               // return from interrupt
 
-// build proc trapframe, and go into kernel
-ENTRY(TimerEntry)                  // will have efl, cs, eip pushed by hardware
-   pushal // push all (8) registers
-   movl %esp, %ebx // copy esp to ebx
-   movw $0x10, %ax                 // set kernel data segment registers
-   mov %ax, %ds                    // set kernel data segment registers
-   mov %ax, %es                    // set kernel data segment registers
-   leal k_stack + K_STACK_SIZE, %esp  // set esp to top of kernel stack
-   pushl %ebx // (onto the kernel stack)
-   cld // clear the direction flag of efl
-   call CNAME(Kernel) // call C function Kernel
+ENTRY(TimerEntry)
+   pushl $TIMER_INTR
+   jmp PreKernel
+
+ENTRY(GetPidEntry)
+   pushl $GETPID_CALL
+   jmp PreKernel
+
+ENTRY(ShowCharEntry)
+   pushl $SHOWCHAR_CALL
+   jmp PreKernel
+
+ENTRY(SleepEntry)
+   pushl $SLEEP_CALL
+   jmp PreKernel
+
+PreKernel:
+   pushal					//SOH matching changs
+   movl %esp, %ebx
+   movw $0x10, %ax
+   mov %ax, %ds
+   mov %ax, %es
+   leal k_stack + K_STACK_SIZE, %esp
+   pushl %ebx
+   cld
+   call CNAME(Kernel)

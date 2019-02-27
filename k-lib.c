@@ -53,4 +53,3 @@ void EnQ(int to_add, q_t *p) {
    p->q[p->tail] = to_add;	//add item to current end
    p->tail++;	//increment tail position
 }
-

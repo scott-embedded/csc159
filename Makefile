@@ -58,7 +58,7 @@ OS_NAME = MyOS
 #       NOTE: Keep the spaces around the equals sign (=) please.
 #	If this changes, run "make depend" to update $OBJECTS.
 #
-SRC = k-entry.S k-lib.c k-sr.c main.c proc.c 
+SRC = k-entry.S k-lib.c k-sr.c main.c proc.c sys-call.c 
 
 #
 #  (3) Add any compiler options you want.  They will be passed to gcc386
@@ -277,7 +277,7 @@ help ::
 #  List of object files.
 #### YQYQYQ-MARK-1 ####
 
-OBJECTS =  k-entry.o k-lib.o k-sr.o main.o proc.o
+OBJECTS =  k-entry.o k-lib.o k-sr.o main.o proc.o sys-call.o
 
 #### YQYQYQ-STOP-1 ####
 #-------------------------------------
@@ -331,7 +331,7 @@ $(MY_DLI) :	$(OBJECTS) Makefile
 #  Dependencies.
 #### YQYQYQ-MARK-2 ####
 #
-#  Dependencies generated Mon Feb 18 20:04:36 PST 2019 by (spede-mkmf $Revision: 1.2 $/1)
+#  Dependencies generated Tue Feb 26 18:02:30 PST 2019 by (spede-mkmf $Revision: 1.2 $/1)
 #
 
 k-entry.o: k-entry.S k-const.h \
@@ -379,7 +379,8 @@ main.o: main.c k-include.h \
  /gaia/home/project/spede2/Target-i386/i686/gnu/i386-unknown-gnu/include/spede/machine/seg.h \
  /gaia/home/project/spede2/Target-i386/i686/gnu/i386-unknown-gnu/include/spede/machine/asmacros.h \
  k-entry.h k-type.h k-const.h k-lib.h k-sr.h proc.h
-proc.o: proc.c k-const.h k-data.h k-type.h
+proc.o: proc.c k-const.h sys-call.h
+sys-call.o: sys-call.c k-const.h
 
 #### YQYQYQ-STOP-2 ####
 

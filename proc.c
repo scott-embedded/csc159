@@ -1,44 +1,31 @@
 // proc.c, 159
 // all user processes are coded here
-// processes do not R/W kernel data or code, must use syscalls
+// processes do not R/W kernel data or code, must use sys-calls
 
-#include "k-const.h"
-#include "k-data.h"
-
-void Delay(void) {  // delay CPU for half second by 'inb $0x80'
-   int i;
-   for (i = 0; i < 500000; i++)	//guess?
-	   asm("inb $0x80");
-}
-
-void ShowChar(int row, int col, char ch) { // show ch at row, col
-   unsigned short *p = VID_HOME;
-   
-   p += row * 80 + col;
-   *p = ch + VID_MASK;
-}
+#include "k-const.h"   // LOOP
+#include "sys-call.h"  // all service calls used below
 
 void InitProc(void) {
-	//cons_printf("InitProc\n");
+   int i;
    while(1) {
-      ShowChar(0, 0, '.');
-      Delay();
+      ShowCharCall(0, 0, '.');
+      for(i=0; i<LOOP/2; i++) asm("inb $0x80");   // this is also a kernel service
 
-      ShowChar(0, 0, ' ');
-      Delay();
+      ShowCharCall(0, 0, ' ');
+      for(i=0; i<LOOP/2; i++) asm("inb $0x80");   // this is also a kernel service
    }
 }
 
 void UserProc(void) {
-   //cons_printf("USERPROC\n");
-   while(1) {
-       
-      ShowChar(run_pid, 0, run_pid / 10 + '0');
-      ShowChar(run_pid, 1, run_pid % 10 + '0');
-      Delay();
+   int my_pid = GetPidCall();  // get my PID
 
-      ShowChar(run_pid, 0, ' ');
-      ShowChar(run_pid, 1, ' ');
-      Delay();
+   while(1) {
+      ShowCharCall(my_pid, 0, '0' + my_pid / 10);  // show my PID
+      ShowCharCall(my_pid, 1, '0' + my_pid % 10);
+      SleepCall(500);                              // sleep .5 sec
+
+      ShowCharCall(my_pid, 0, ' ');                // erasure
+      ShowCharCall(my_pid, 1, ' ');
+      SleepCall(500);
    }
 }

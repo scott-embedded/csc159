@@ -7,10 +7,19 @@
 
 typedef void (*func_p_t)(void); // void-return function pointer type
 
-typedef enum {UNUSED, READY, RUN} state_t;
+typedef enum {UNUSED, READY, RUN, SLEEP} state_t;  //CODING HINTS NMA
 
+   
 typedef struct {
-   unsigned int reg[8];
+   unsigned int edi; 
+   unsigned int esi;
+   unsigned int ebp;
+   unsigned int esp;
+   unsigned int ebx;
+   unsigned int edx;
+   unsigned int ecx;
+   unsigned int eax;
+   unsigned int entry_id;
    unsigned int eip;
    unsigned int cs;
    unsigned int efl;
@@ -21,6 +30,7 @@ typedef struct {
    int run_count;
    int total_count;
    trapframe_t *trapframe_p;
+   int wake_centi_sec;
 } pcb_t;                     
 
 typedef struct {             // generic queue type
