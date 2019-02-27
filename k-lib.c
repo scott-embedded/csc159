@@ -59,5 +59,4 @@ void EnQ(int to_add, q_t *p) {
 
    p->q[p->tail] = to_add;	
    p->tail++;
-   p->q[p->tail] = NONE;
 }

@@ -6,10 +6,10 @@
 .text
 
 ENTRY(Loader)
-   movl 4(%esp), %ebx
-   movl %ebx, %esp
-   popa
-   add $4, %esp
+//   movl 4(%esp), %ebx
+//   movl %ebx, %esp
+//   popa
+//   add $4, %esp
    iret
 
 ENTRY(TimerEntry)
