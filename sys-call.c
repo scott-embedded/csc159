@@ -37,4 +37,3 @@ void SleepCall(int centi_sec) {  // # of 1/100 of a second to sleep
        : "eax"              // used registers
    ); //for now, but please adjust this into more asm 
 }
->>>>>>> scott_code

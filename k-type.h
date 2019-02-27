@@ -11,21 +11,7 @@ typedef enum {UNUSED, READY, RUN, SLEEP} state_t;  //CODING HINTS NMA
 
    
 typedef struct {
-   unsigned int edi; 
-   unsigned int esi;
-   unsigned int ebp;
-   unsigned int esp;
-   unsigned int ebx;
-   unsigned int edx;
-   unsigned int ecx;
-   unsigned int eax;
-   unsigned int entry_id;
-   unsigned int eip;
-   unsigned int cs;
-   unsigned int efl;
-
-   //CODING HINTS NMA
-   unsigned int edi
+   unsigned int edi;
    unsigned int esi;
    unsigned int ebp;
    unsigned int esp;

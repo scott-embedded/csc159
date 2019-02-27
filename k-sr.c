@@ -29,7 +29,7 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
    pcb[pid].trapframe_p--;
    pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
    pcb[pid].trapframe_p->cs = get_cs();                  // dupl from CPU
-   pcb[pid].trapframe_p->eip = p;                        // set to code
+   pcb[pid].trapframe_p->eip =(int) p;                        // set to code
    
 }
 
