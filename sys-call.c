@@ -18,15 +18,23 @@ int GetPidCall(void) {
 
 void ShowCharCall(int row, int col, char ch) {
    asm("movl %0, %%eax;     // send in row via eax
-        movl ...            // send in col via ebx
-        movl ...            // send in ch via ecx
+        movl %1, %%ebx;            // send in col via ebx
+        movl %2, %%ecx;            // send in ch via ecx
         int %3"             // initiate call, %3 gets entry_id
        :                    // no output
-       : "g" (?), ...
-       : "eax", ...         // affected/used registers
+       : "g" (row), "g" (col), "g" (ch), "g" (SHOWCHAR_CALL)
+       : "eax", "ebx", "ecx"         // affected/used registers
    );
 }
 
 void SleepCall(int centi_sec) {  // # of 1/100 of a second to sleep
-   asm( ...
+
+
+      asm("movl %0, %%eax;
+           int %1"     // after, copy eax to variable 'pid'
+       :         // output
+       : "g" (centi_sec), "g" (SLEEP_CALL)  // input
+       : "eax"              // used registers
+   ); //for now, but please adjust this into more asm 
 }
+>>>>>>> scott_code

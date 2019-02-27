@@ -13,6 +13,11 @@ __BEGIN_DECLS
 void TimerEntry(void);            // coded in k-entry.S, assembler won't like this syntax
 void Loader(trapframe_t *);       // coded in k-entry.S
 
+void GetPidEntry(void);
+
+void ShowCharEntry(void);
+
+void SleepEntry(void);
 __END_DECLS
 
 #endif // ifndef ASSEMBLER

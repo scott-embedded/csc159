@@ -7,5 +7,8 @@
 
 void NewProcSR(func_p_t);  // prototype those in k-sr.c here
 void TimerSR(void);
+int GetPidSr(void);
+void ShowCharCallSr(int row, int col, char ch);
+void SleepSr(int centi_sec);
 
 #endif
