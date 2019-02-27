@@ -3,7 +3,7 @@
 #ifndef __K_LIB__
 #define __K_LIB__
 
-#include "k-type.h"			//SOH
+#include "k-type.h"		
 
 void Bzero(char *, int bytes);     // prototype those in k-lib.c here
 int QisEmpty(q_t *);

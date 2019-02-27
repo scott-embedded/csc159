@@ -7,7 +7,7 @@
 
 void Delay(void) {  // delay CPU for half second by 'inb $0x80'
    int i;
-   for (i = 0; i < loop/2; i++)
+   for (i = 0; i < 500000; i++)	//guess?
 	   asm("inb $0x80");
 }
 
@@ -19,17 +19,20 @@ void ShowChar(int row, int col, char ch) { // show ch at row, col
 }
 
 void InitProc(void) {
+	//cons_printf("InitProc\n");
    while(1) {
-      ShowChar(0, 0, '.'):
+      ShowChar(0, 0, '.');
       Delay();
 
-      ShowChar(0, 0, ' '):
+      ShowChar(0, 0, ' ');
       Delay();
    }
 }
 
 void UserProc(void) {
+   //cons_printf("USERPROC\n");
    while(1) {
+       
       ShowChar(run_pid, 0, run_pid / 10 + '0');
       ShowChar(run_pid, 1, run_pid % 10 + '0');
       Delay();

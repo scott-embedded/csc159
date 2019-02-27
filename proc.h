@@ -1,6 +1,6 @@
 // proc.h, 159
 
-#ifndef __PROC__	//SOH
+#ifndef __PROC__
 #define __PROC__
 
 void Delay(void);  // prototype those in proc.c here
