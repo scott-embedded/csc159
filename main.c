@@ -1,5 +1,5 @@
 // main.c, 159
-// OS phase 1
+// OS phase 2
 // Hi!
 // Team Name: Katana (Members: Nora Ali, Scott O'Hair, Tim Gates)
 
@@ -66,8 +66,6 @@ int main(void) {
 
    NewProcSR(InitProc);  // create InitProc
    Scheduler();
-   breakpoint();
-   
    Loader(pcb[run_pid].trapframe_p); // load/run it
    
    return 0; // statement never reached, compiler asks it for syntax
