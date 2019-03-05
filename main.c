@@ -40,7 +40,7 @@ void InitKernelData(void) {         // init kernel data
 	   EnQ(i, &pid_q);
    
    //Add all mutex ID's into mux_q
-   for (i = 0; i < PROC_SIZE; i++)
+   for (i = 0; i < MUX_SIZE; i++)
 	   EnQ(i, &mux_q);
    
    run_pid = NONE; 		//set run_pid to NONE
@@ -89,6 +89,9 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    pcb[run_pid].trapframe_p = trapframe_p; // save it
 
    switch(trapframe_p->entry_id){
+	  case TIMER_INTR:
+	    TimerSR();
+	  	break;
       case SLEEP_CALL:
          SleepSr(trapframe_p->eax);
          break;
@@ -98,8 +101,14 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       case SHOWCHAR_CALL:
          ShowCharCallSr(trapframe_p->eax, trapframe_p->ebx, trapframe_p->ecx);
          break;
-      case TIMER_INTR:
-         TimerSR();
+      case MUX_CREATE_CALL:
+         trapframe_p->eax = MuxCreateSR(trapframe_p->eax);
+		 break;		 
+      case MUX_OP_CALL:
+         MuxOpSR(trapframe_p->eax, trapframe_p->ebx);
+		 break;
+	  
+	  	 
    }       
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
    if (cons_kbhit()) {            // check if keyboard pressed
