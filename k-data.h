@@ -10,9 +10,11 @@
 
 extern int run_pid;                        // current running PID; if -1, none selected
 extern int sys_centi_sec;                  // system time in centi-sec, initialize it  CODING HINTS NMA
-extern q_t pid_q, ready_q, sleep_q;        // avail PID and those created/ready to run  CODING HINTS NMA
+extern int vid_mux;							//for video access control
+extern q_t pid_q, ready_q, sleep_q, mux_q;        // avail PID and those created/ready to run  CODING HINTS NMA
 extern pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 extern char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
+extern mux_t mux[MUX_SIZE];				//kernel has these mutexes to spar
 
 
 

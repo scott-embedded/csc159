@@ -7,7 +7,7 @@
 
 typedef void (*func_p_t)(void); // void-return function pointer type
 
-typedef enum {UNUSED, READY, RUN, SLEEP} state_t;  //CODING HINTS NMA
+typedef enum {UNUSED, READY, RUN, SLEEP, SUSPEND} state_t;  
 
    
 typedef struct {
@@ -37,5 +37,11 @@ typedef struct {             // generic queue type
   int q[Q_SIZE];             // for a simple queue
   int tail;
 } q_t;
+
+typedef struct {
+	int flag;	//max number of processes
+	int creater;	//requester/owning PID
+	q_t suspend_q;	//suspended PID's
+} mux_t;
 
 #endif

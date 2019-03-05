@@ -12,11 +12,14 @@
 
 // kernel data are all here:
 int run_pid;                        // current running PID; if -1, none selected
-int sys_centi_sec;                  // system time in centi-sec, initialize it  CODING HINTS NMA
-q_t pid_q, ready_q, sleep_q;        // sleeping proc PID's queued in here  CODING HINTS NMA
+int sys_centi_sec;                  // system time in centi-sec, initialize it 
+q_t pid_q, ready_q, sleep_q, mux_q;        // sleeping proc PID's queued in here 
 pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
 struct i386_gate *intr_table;    // intr table's DRAM location
+mux_t mux[MUX_SIZE];			//kernel has these mutexes to spare
+int vid_mux; 				//video access control
+
 
 
 void InitKernelData(void) {         // init kernel data
@@ -25,14 +28,21 @@ void InitKernelData(void) {         // init kernel data
       
    intr_table = get_idt_base();            // get intr table location
 
-   Bzero( (char*)&pid_q, sizeof(q_t));                      // clear pid & ready queues 
+   // clear queues 
+   Bzero( (char*)&pid_q, sizeof(q_t));                      
    Bzero( (char*)&ready_q, sizeof(q_t));
-   Bzero( (char*)&sleep_q, sizeof(q_t));    //clear sleep_q CODING HINTS NMA                  
+   Bzero( (char*)&sleep_q, sizeof(q_t));  
+   Bzero( (char*)&mux_q, sizeof(q_t));           
+         
 
    //Add all the processes to the pid queue
    for (i = 0; i < PROC_SIZE; i++)
 	   EnQ(i, &pid_q);
-
+   
+   //Add all mutex ID's into mux_q
+   for (i = 0; i < PROC_SIZE; i++)
+	   EnQ(i, &mux_q);
+   
    run_pid = NONE; 		//set run_pid to NONE
 }
 
@@ -41,6 +51,8 @@ void InitKernelControl(void) {      // init kernel control
    fill_gate(&intr_table[GETPID_CALL], (int)GetPidEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[SHOWCHAR_CALL], (int)ShowCharEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[SLEEP_CALL], (int)SleepEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[MUX_CREATE_CALL], (int)MuxCreateEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[MUX_OP_CALL], (int)MuxOpEntry, get_cs(), ACC_INTR_GATE, 0);
    outportb(PIC_MASK, MASK);                   // mask out PIC for timer
 }
 

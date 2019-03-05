@@ -28,9 +28,17 @@ ENTRY(ShowCharEntry)
 ENTRY(SleepEntry)
    pushl $SLEEP_CALL
    jmp PreKernel
+   
+ENTRY(MuxCreateEntry)
+   pushl $MUX_CREATE_CALL
+   jmp PreKernel
+   
+ENTRY(MuxOpEntry)
+   pushl $MUX_OP_CALL
+   jmp PreKernel
 
 PreKernel:
-   pushal					//SOH matching changs
+   pushal					
    movl %esp, %ebx
    movw $0x10, %ax
    mov %ax, %ds

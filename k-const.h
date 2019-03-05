@@ -4,14 +4,19 @@
 #define __K_CONST__
 
 
-//START CODING HINTS NMA
 
 
 #define GETPID_CALL 48
 #define SHOWCHAR_CALL 49
 #define SLEEP_CALL 50
+#define MUX_CREATE_CALL 51
+#define MUX_OP_CALL 52
+#define MUX_SIZE 20
+#define STR_SIZE 101
+#define LOCK 1
+#define UNLOCK 2
+#define STDOUT 1
 
-//END OF CODING HINTS
 
 #define NONE -1             // used when none
 #define TIMER_INTR 32       // TIMER INTR constant identifier
