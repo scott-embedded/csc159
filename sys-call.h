@@ -6,5 +6,8 @@
 int GetPidCall(void);
 void ShowCharCall(int row, int col, char ch);
 void SleepCall(int centi_sec);
+int MuxCreateCall(int);
+void MuxOpCall(int, int);
+void WriteCall(int, char *);
 
 #endif

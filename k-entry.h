@@ -18,6 +18,10 @@ void GetPidEntry(void);
 void ShowCharEntry(void);
 
 void SleepEntry(void);
+
+void MuxCreateEntry(void);
+
+void MuxOpEntry(void);
 __END_DECLS
 
 #endif // ifndef ASSEMBLER

@@ -2,12 +2,16 @@
 // all user processes are coded here
 // processes do not R/W kernel data or code, must use sys-calls
 
+
 #include "k-const.h"   // LOOP
 #include "sys-call.h"  // all service calls used below
+#include "k-data.h"
+#include "k-lib.h"
+#include <spede/string.h> //for strcat
 
 void InitProc(void) {
-   vid_mux = MuxCreateCall(1);	//initialize mutex flag value to 1
    int i;
+   vid_mux = MuxCreateCall(1);	//initialize mutex flag value to 1
    while(1) {
       ShowCharCall(0, 0, '.');
       for(i=0; i<LOOP/2; i++) asm("inb $0x80");   // this is also a kernel service
@@ -19,25 +23,34 @@ void InitProc(void) {
 
 void UserProc(void) {
    int my_pid = GetPidCall();  // get my PID
+   
+    //Build the string
+   char output_arr[80];
+   char blank[80];
+   char ch[3];
+   
+   Bzero((char*)&output_arr, 80);
+   Bzero((char*)&blank, 80);
+   
+   ch[0] = '0' + my_pid / 10;
+   ch[1] = '0' + my_pid % 10;
+   ch[2] = '\0';
+   
+   strcat(output_arr, "PID ");
+   strcat(output_arr, ch);
+   strcat(output_arr, " PROCESS IS RUNNING USING EXCLUSIVE ACCESS TO THE VIDEO DISPLAY");
+     
+   strcat(blank,      "                                                                     ");
 
    while(1) {
-	  char arr[50];
-	  strcat(arr, "PID ");
-	  strcat(arr, my_pid);
-	  strcat(arr, "PROCESS IS RUNNING USING EXCLUSIVE ACCESS TO THE VIDEO DISPLAY");
+	  
 	  MuxOpCall(vid_mux, LOCK); 
-	  WriteCall(STDOUT, arr);
-      			//ShowCharCall(my_pid, 0, '0' + my_pid / 10);  // show my PID
-      			//ShowCharCall(my_pid, 1, '0' + my_pid % 10);
-      SleepCall(500);                              // sleep .5 sec
+	  WriteCall(STDOUT, output_arr);
+      SleepCall(50);                              // sleep .5 sec
 
-	  memset(arr, 0, sizeof(arr));	//clear array
-	  strcat(arr, "                                                              ");	//blank out the writing
-	  WriteCall(STDOUT, arr);
-      			//ShowCharCall(my_pid, 0, ' ');                // erasure
-      			//ShowCharCall(my_pid, 1, ' ');
+	  WriteCall(STDOUT, blank);
 	  MuxOpCall(vid_mux, UNLOCK); 
-      SleepCall(500);
+      SleepCall(50);
 	  
    }
 }

@@ -2,6 +2,8 @@
 // calls to kernel services
 
 #include "k-const.h"
+#include <spede/stdio.h>
+#include <spede/flames.h>
 
 int GetPidCall(void) {
    int pid;
@@ -53,7 +55,7 @@ int MuxCreateCall(int flag) {
 void MuxOpCall(int mux_id, int opcode) {
     asm("movl %0, %%eax;
 		movl %1, %%ebx;
-         int %3"     // after, copy eax to variable 'pid'
+         int %2"     // after, copy eax to variable 'pid'
      :         // output
      : "g" (mux_id), "g" (opcode), "g" (MUX_OP_CALL)  // input
      : "eax", "ebx"              // used registers
@@ -61,12 +63,12 @@ void MuxOpCall(int mux_id, int opcode) {
 }
 
 void WriteCall(int device, char *str) {
-	
     int row = GetPidCall();  //to set row number (need to run demo to find out how this is supposed to behave)
     int col = 0;  //column is set zero
 	if (device == STDOUT) {	//if device is STDOUT {
-    	while (*str != '\n') {	//while what str points to is not a null character {
-          ShowCharCall(row, col, *str)   //Use an existing service call to show this character, at row and column
+    	while (*str != '\0') {	//while what str points to is not a null character {
+          ShowCharCall(row, col, *str);   //Use an existing service call to show this character, at row and column
+		  
           str++;   //increment the str pointer and the column position
 		  col++;
 		}

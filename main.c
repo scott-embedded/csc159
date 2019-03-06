@@ -1,5 +1,5 @@
 // main.c, 159
-// OS phase 2
+// OS phase 3
 // Hi!
 // Team Name: Katana (Members: Nora Ali, Scott O'Hair, Tim Gates)
 
@@ -13,12 +13,12 @@
 // kernel data are all here:
 int run_pid;                        // current running PID; if -1, none selected
 int sys_centi_sec;                  // system time in centi-sec, initialize it 
+int vid_mux;
 q_t pid_q, ready_q, sleep_q, mux_q;        // sleeping proc PID's queued in here 
 pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
 struct i386_gate *intr_table;    // intr table's DRAM location
 mux_t mux[MUX_SIZE];			//kernel has these mutexes to spare
-int vid_mux; 				//video access control
 
 
 
