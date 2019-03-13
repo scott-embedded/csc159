@@ -68,7 +68,7 @@ void WriteCall(int device, char *str) {
     int row = GetPidCall();  //to set row number (need to run demo to find out how this is supposed to behave)
     int col = 0;  //column is set zero
 	if (device == STDOUT) {	//if device is STDOUT {
-    	while (str != '\0') {	//while what str points to is not a null character {
+    	while (*str != '\0') {	//while what str points to is not a null character {
           ShowCharCall(row, col, *str);   //Use an existing service call to show this character, at row and column
 		  
           str++;   //increment the str pointer and the column position
@@ -85,9 +85,10 @@ void WriteCall(int device, char *str) {
 			term_no = 1;
 		
 		//while what str points to is not a null character 
-		while (str != '\0') {
+		while (*str != '\0') {
 		  MuxOpCall(term[term_no].out_mux, LOCK);  	//lock the output mutex of the terminal interface data structure
-		  EnQ(str, &term[term_no].out_q);			//enqueue the character of the string to the output queue of the terminal interface data structure
+		  breakpoint();
+		  EnQ(*str, &term[term_no].out_q);			//enqueue the character of the string to the output queue of the terminal interface data structure
           
 		  if (device == TERM0_INTR)					//if the device is TERM0_INTR, issue asm("int $35");
 		    asm("int $35");		
