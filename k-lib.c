@@ -11,11 +11,11 @@ void Bzero(char *p, int bytes) {
 }
 
 int QisEmpty(q_t *p) { // return 1 if empty, else 0
-	return !p->tail;
+	return (p->tail == 0);
 }
 
 int QisFull(q_t *p) { // return 1 if full, else 0
-	return p->tail == Q_SIZE;
+	return (p->tail == Q_SIZE);
 }
 
 // dequeue, 1st # in queue; if queue empty, return -1
@@ -31,6 +31,7 @@ int DeQ(q_t *p) { // return -1 if q[] is empty
    
    ret = p->q[0];	//set return value to from front of queue
    p->tail--;		//move tail back
+   
 
    //shift everything to the front by 1
    for(i = 0; i < p->tail; i++)	
@@ -39,15 +40,14 @@ int DeQ(q_t *p) { // return -1 if q[] is empty
    //clear out 'old' entries
    for(i = p->tail; i < Q_SIZE; i++)
 	   p->q[i] = NONE;
-   
    return ret;
 }
 
 // if not full, enqueue # to tail slot in queue
 void EnQ(int to_add, q_t *p) {
    if(QisFull(p)) {
-      cons_printf("Panic: queue is full, cannot EnQ!\n");
-	  breakpoint();
+	   cons_printf("Panic: queue is full, cannot EnQ!\n");
+	   breakpoint();
       return;	
    }
    

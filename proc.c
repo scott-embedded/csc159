@@ -70,9 +70,7 @@ void UserProc(void) {
    which_term = my_pid % 2 == 1 ? TERM0_INTR : TERM1_INTR; // <---- new
    
    while(1) {
-	  
 	  //MuxOpCall(vid_mux, LOCK); 
-	  
 	  WriteCall(STDOUT, str1);
 	  WriteCall(which_term, str1);    
 	  WriteCall(which_term, "\n\r");

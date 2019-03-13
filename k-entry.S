@@ -46,12 +46,12 @@ ENTRY(Term1Entry)
    jmp PreKernel
 
 PreKernel:
-   pushal					
-   movl %esp, %ebx
-   movw $0x10, %ax
-   mov %ax, %ds
-   mov %ax, %es
-   leal k_stack + K_STACK_SIZE, %esp
-   pushl %ebx
-   cld
-   call CNAME(Kernel)
+   pushal							// push all (8) registers
+   movl %esp, %ebx					// copy esp to ebx
+   movw $0x10, %ax					// set kernel Data Segment registers
+   mov %ax, %ds						// set kernel Data Degment registers
+   mov %ax, %es						// set kernel Data Segment registers
+   leal k_stack + K_STACK_SIZE, %esp	// set esp to top of kernel stack
+   pushl %ebx						// (onto the kernel stack)
+   cld								// clear the direction flag of efl
+   call CNAME(Kernel)				// call C function Kernel

@@ -95,8 +95,8 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 
    switch(trapframe_p->entry_id){
 	  case TIMER_INTR:
-	    TimerSR();
-	  	break;
+	     TimerSR();
+	  	 break;
       case SLEEP_CALL:
          SleepSr(trapframe_p->eax);
          break;

@@ -28,11 +28,11 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
    }
 
 // point trapframe_p to stack & fill it out
-   pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE];
+   pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE];	//Give the process a place to live on the stack
    pcb[pid].trapframe_p--;
-   pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr
+   pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr by setting bit 9 of EFLAGS reg to 1 (Interrupt Enable Flag IF)
    pcb[pid].trapframe_p->cs = get_cs();                  // dupl from CPU
-   pcb[pid].trapframe_p->eip =(int) p;                        // set to code
+   pcb[pid].trapframe_p->eip = (int)p;                        // set to code
    
 }
 
@@ -129,19 +129,21 @@ void TermSR(int term_no) {
 		TermTxSR(term_no);
     else if (event_type == RXRDY)    	//else if it's RXRDY, call TermRxSR(term_no) which does nothing but 'return;'
 		TermRxSR(term_no);
-    if (term[term_no].tx_missed)						//if the tx_missed flag is TRUE, also call TermTxSR(term_no)
+    if (term[term_no].tx_missed == TRUE)						//if the tx_missed flag is TRUE, also call TermTxSR(term_no)
 		TermTxSR(term_no);
 }
 
 void TermTxSR(int term_no) {
+	char ch;
 	if (QisEmpty(&term[term_no].out_q)) { 		//if the out_q in terminal interface data structure is empty:
 		term[term_no].tx_missed = TRUE;				//1. set the tx_missed flag to TRUE
 		return;							//2. return
 	}
 	else {	
-		char ch = DeQ(&term[term_no].out_q);					//1. get 1st char from out_q
-		//cons_printf("%c ", ch);
-		//breakpoint();
+		
+		ch = DeQ(&term[term_no].out_q);					//1. get 1st char from out_q
+	  	//cons_printf("DEQ %c ", ch);
+	  	//breakpoint();
       	outportb(term[term_no].io_base + DATA, ch);		//2. use outportb() to send it to the DATA (0 in rs232.h) register of the terminal port N
       	term[term_no].tx_missed = FALSE;								//3. set the tx_missed flag to FALSE
       	MuxOpSR(term[term_no].out_mux, UNLOCK); 				//4. unlock the out_mux of the terminal interface data structure

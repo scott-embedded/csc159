@@ -6,6 +6,7 @@
 #include <spede/flames.h>
 #include "k-data.h"
 #include "k-lib.h"
+#include "k-sr.h"
 
 int GetPidCall(void) {
    int pid;
@@ -86,17 +87,18 @@ void WriteCall(int device, char *str) {
 			term_no = 0;
 		else if (device == TERM1_INTR)
 			term_no = 1;
+
 		
 		//while what str points to is not a null character 
 		while (*str != '\0') {
 		  MuxOpCall(term[term_no].out_mux, LOCK);  	//lock the output mutex of the terminal interface data structure
 		  EnQ(*str, &term[term_no].out_q);			//enqueue the character of the string to the output queue of the terminal interface data structure
-		  //cons_printf("%c ", *str);
+		  //cons_printf("ENQ %c ", cd*str);
 		  //breakpoint();
 		  
 		  if (device == TERM0_INTR)					//if the device is TERM0_INTR, issue asm("int $35");
 		    asm("int $35");		
-		  else										//otherwise, issue: asm("int $36");
+		  else if (device == TERM1_INTR)							//otherwise, issue: asm("int $36");
 			asm("int $36");			
 			
 		  str++;									//advance pointer 'str'
