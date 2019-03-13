@@ -47,6 +47,7 @@ int DeQ(q_t *p) { // return -1 if q[] is empty
 void EnQ(int to_add, q_t *p) {
    if(QisFull(p)) {
       cons_printf("Panic: queue is full, cannot EnQ!\n");
+	  breakpoint();
       return;	
    }
    

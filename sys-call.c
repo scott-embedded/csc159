@@ -67,8 +67,9 @@ void MuxOpCall(int mux_id, int opcode) {
 void WriteCall(int device, char *str) {
     int row = GetPidCall();  //to set row number (need to run demo to find out how this is supposed to behave)
     int col = 0;  //column is set zero
-	if (device == STDOUT) {	//if device is STDOUT {
-    	while (*str != '\0') {	//while what str points to is not a null character {
+	
+	if (device == STDOUT) {	//if device is STDOUT 
+    	while (*str != '\0') {	//while what str points to is not a null character 
           ShowCharCall(row, col, *str);   //Use an existing service call to show this character, at row and column
 		  
           str++;   //increment the str pointer and the column position
@@ -76,9 +77,11 @@ void WriteCall(int device, char *str) {
 		}
 	}
 	else {
+		
 		//set 'int term_no' to 0 or 1 depending on the given argument
 		//'device' whether it is TERM0_INTR or TERM1_INTR
 		int term_no;
+	
 		if (device == TERM0_INTR)
 			term_no = 0;
 		else 
@@ -87,9 +90,10 @@ void WriteCall(int device, char *str) {
 		//while what str points to is not a null character 
 		while (*str != '\0') {
 		  MuxOpCall(term[term_no].out_mux, LOCK);  	//lock the output mutex of the terminal interface data structure
-		  breakpoint();
 		  EnQ(*str, &term[term_no].out_q);			//enqueue the character of the string to the output queue of the terminal interface data structure
-          
+		  //cons_printf("%c ", *str);
+		  //breakpoint();
+		  
 		  if (device == TERM0_INTR)					//if the device is TERM0_INTR, issue asm("int $35");
 		    asm("int $35");		
 		  else										//otherwise, issue: asm("int $36");

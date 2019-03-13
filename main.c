@@ -35,7 +35,7 @@ void InitKernelData(void) {         // init kernel data
    Bzero( (char*)&pid_q, sizeof(q_t));                      
    Bzero( (char*)&ready_q, sizeof(q_t));
    Bzero( (char*)&sleep_q, sizeof(q_t));  
-   Bzero( (char*)&mux_q, sizeof(q_t));           
+   Bzero( (char*)&mux_q, sizeof(q_t));   
          
 
    //Add all the processes to the pid queue
@@ -58,7 +58,7 @@ void InitKernelControl(void) {      // init kernel control
    fill_gate(&intr_table[MUX_OP_CALL], (int)MuxOpEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[TERM0_INTR], (int)Term0Entry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[TERM1_INTR], (int)Term1Entry, get_cs(), ACC_INTR_GATE, 0);
-   outportb(PIC_MASK, MASK);                   // mask out PIC for timer
+   outportb(PIC_MASK, MASK);                   // mask out PIC for new entries
 }
 
 void Scheduler(void) {      // choose run_pid
