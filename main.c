@@ -109,6 +109,9 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       case MUX_CREATE_CALL:
          trapframe_p->eax = MuxCreateSR(trapframe_p->eax);
 		 break;		 
+	  case MUX_OP_CALL:
+		 MuxOpSR(trapframe_p->eax, trapframe_p->ebx);
+		 break;
       case TERM0_INTR:
          TermSR(0);
 		 outportb(PIC_CONTROL, TERM0_DONE);
