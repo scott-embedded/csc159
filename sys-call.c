@@ -84,7 +84,7 @@ void WriteCall(int device, char *str) {
 	
 		if (device == TERM0_INTR)
 			term_no = 0;
-		else 
+		else if (device == TERM1_INTR)
 			term_no = 1;
 		
 		//while what str points to is not a null character 
