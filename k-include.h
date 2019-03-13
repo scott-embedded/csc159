@@ -11,8 +11,7 @@
 #include <spede/machine/proc_reg.h> // get_idt_base(), get_cs(), set_cr3(), etc
 #include <spede/machine/seg.h> // struct i386_gate, fill_gate(), etc.
 #include <spede/machine/asmacros.h> // ASM(), CNAME(), ENTRY(), etc.
-
-//#include <spede/machine/rs232.h>    // for terminals, IRQ3 constants
+#include <spede/machine/rs232.h>    // for terminals, IRQ3 constants
 
 #endif
 

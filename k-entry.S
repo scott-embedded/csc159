@@ -36,6 +36,14 @@ ENTRY(MuxCreateEntry)
 ENTRY(MuxOpEntry)
    pushl $MUX_OP_CALL
    jmp PreKernel
+   
+ENTRY(Term0Entry)
+   pushl $TERM0_INTR
+   jmp PreKernel
+   
+ENTRY(Term1Entry)
+   pushl $TERM1_INTR
+   jmp PreKernel
 
 PreKernel:
    pushal					

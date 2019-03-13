@@ -5,6 +5,8 @@
 #include "k-data.h"
 #include "k-lib.h"
 #include "k-sr.h"
+#include "sys-call.h"
+
 
 // to create a process: alloc PID, PCB, and process stack
 // build trapframe, initialize PCB, record PID to ready_q
@@ -119,4 +121,31 @@ void MuxOpSR(int mux_id, int opcode) {
 		}
 			
 	}
+}
+
+void TermSR(int term_no) {
+	int event_type = inportb(term[term_no].io_base + IIR);		//read the type of event from IIR (2 in rs232.h) of the terminal port (IIR is Interrupt Indicator Register) NEEDS WORK
+    if (event_type == TXRDY)  			//if it's TXRDY, call TermTxSR(term_no)
+		TermTxSR(term_no);
+    else  								//else if it's RXRDY, call TermRxSR(term_no) which does nothing but 'return;'
+		TermRxSR(term_no);
+    if (term[term_no].tx_missed)						//if the tx_missed flag is TRUE, also call TermTxSR(term_no)
+		TermTxSR(term_no);
+}
+
+void TermTxSR(int term_no) {
+	if (QisEmpty(&term[term_no].out_q)) { 		//if the out_q in terminal interface data structure is empty:
+		term[term_no].tx_missed = TRUE;				//1. set the tx_missed flag to TRUE
+		return;							//2. return
+	}
+	else {	
+		char ch = DeQ(&term[term_no].out_q);					//1. get 1st char from out_q
+      	outportb(term[term_no].io_base + DATA, ch);		//2. use outportb() to send it to the DATA (0 in rs232.h) register of the terminal port NEEDS WORK
+      	term[term_no].tx_missed = FALSE;								//3. set the tx_missed flag to FALSE
+      	MuxOpCall(term[term_no].out_mux, UNLOCK); 				//4. unlock the out_mux of the terminal interface data structure
+	}
+}
+
+void TermRxSR(int term_no) {
+	return;
 }

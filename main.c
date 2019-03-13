@@ -19,7 +19,10 @@ pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
 struct i386_gate *intr_table;    // intr table's DRAM location
 mux_t mux[MUX_SIZE];			//kernel has these mutexes to spare
-
+term_t term[TERM_SIZE] = {
+	{ TRUE, TERM0_IO_BASE },
+	{ TRUE, TERM1_IO_BASE }
+}; 
 
 
 void InitKernelData(void) {         // init kernel data
@@ -53,6 +56,8 @@ void InitKernelControl(void) {      // init kernel control
    fill_gate(&intr_table[SLEEP_CALL], (int)SleepEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[MUX_CREATE_CALL], (int)MuxCreateEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[MUX_OP_CALL], (int)MuxOpEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[TERM0_INTR], (int)Term0Entry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[TERM1_INTR], (int)Term1Entry, get_cs(), ACC_INTR_GATE, 0);
    outportb(PIC_MASK, MASK);                   // mask out PIC for timer
 }
 
@@ -104,9 +109,14 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       case MUX_CREATE_CALL:
          trapframe_p->eax = MuxCreateSR(trapframe_p->eax);
 		 break;		 
-      case MUX_OP_CALL:
-         MuxOpSR(trapframe_p->eax, trapframe_p->ebx);
+      case TERM0_INTR:
+         TermSR(0);
+		 outportb(PIC_CONTROL, TERM0_DONE);
 		 break;
+      case TERM1_INTR:
+      	 TermSR(1);
+	 	 outportb(PIC_CONTROL, TERM1_DONE);
+         break;
 	  
 	  	 
    }       

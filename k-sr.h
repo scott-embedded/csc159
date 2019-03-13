@@ -13,5 +13,8 @@ void ShowCharCallSr(int row, int col, char ch);
 void SleepSr(int centi_sec);
 int MuxCreateSR(int flag);
 void MuxOpSR(int mux_id, int opcode);
+void TermSR(int term_no);
+void TermTxSR(int term_no);
+void TermRxSR(int term_no);
 
 #endif

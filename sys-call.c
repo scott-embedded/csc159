@@ -4,6 +4,8 @@
 #include "k-const.h"
 #include <spede/stdio.h>
 #include <spede/flames.h>
+#include "k-data.h"
+#include "k-lib.h"
 
 int GetPidCall(void) {
    int pid;
@@ -72,6 +74,30 @@ void WriteCall(int device, char *str) {
           str++;   //increment the str pointer and the column position
 		  col++;
 		}
+	}
+	else {
+		//set 'int term_no' to 0 or 1 depending on the given argument
+		//'device' whether it is TERM0_INTR or TERM1_INTR
+		int term_no;
+		if (device == TERM0_INTR)
+			term_no = 0;
+		else 
+			term_no = 1;
+		
+		//while what str points to is not a null character 
+		while (*str != '\0') {
+		  MuxOpCall(term[term_no].out_mux, LOCK);  	//lock the output mutex of the terminal interface data structure
+		  EnQ(*str, &term[term_no].out_q);			//enqueue the character of the string to the output queue of the terminal interface data structure
+          
+		  if (device == TERM0_INTR)					//if the device is TERM0_INTR, issue asm("int $35");
+		    asm("int $35");		
+		  else										//otherwise, issue: asm("int $36");
+			asm("int $36");			
+			
+		  str++;									//advance pointer 'str'
+		  
+		}
+		
 	}
 	
 }
