@@ -124,7 +124,7 @@ void MuxOpSR(int mux_id, int opcode) {
 }
 
 void TermSR(int term_no) {
-	int event_type = inportb(term[term_no].io_base + IIR);		//read the type of event from IIR (2 in rs232.h) of the terminal port (IIR is Interrupt Indicator Register) NEEDS WORK
+	int event_type = inportb(term[term_no].io_base + IIR);		//read the type of event from IIR (2 in rs232.h) of the terminal port (IIR is Interrupt Indicator Register)
     if (event_type == TXRDY)  			//if it's TXRDY, call TermTxSR(term_no)
 		TermTxSR(term_no);
     else if (event_type == RXRDY)    	//else if it's RXRDY, call TermRxSR(term_no) which does nothing but 'return;'
@@ -135,15 +135,14 @@ void TermSR(int term_no) {
 
 void TermTxSR(int term_no) {
 	char ch;
-	if (QisEmpty(&term[term_no].out_q)) { 		//if the out_q in terminal interface data structure is empty:
+	if (QisEmpty(&term[term_no].out_q)) { 			//if the out_q in terminal interface data structure is empty:
 		term[term_no].tx_missed = TRUE;				//1. set the tx_missed flag to TRUE
-		return;							//2. return
+		return;										//2. return
 	}
 	else {	
 		
 		ch = DeQ(&term[term_no].out_q);					//1. get 1st char from out_q
-	  	//cons_printf("DEQ %c ", ch);
-	  	//breakpoint();
+		//cons_printf("%c ", ch);
       	outportb(term[term_no].io_base + DATA, ch);		//2. use outportb() to send it to the DATA (0 in rs232.h) register of the terminal port N
       	term[term_no].tx_missed = FALSE;								//3. set the tx_missed flag to FALSE
       	MuxOpSR(term[term_no].out_mux, UNLOCK); 				//4. unlock the out_mux of the terminal interface data structure

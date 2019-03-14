@@ -59,10 +59,8 @@ void UserProc(void) {
    int my_pid = GetPidCall();  // get my PID
    
     //Build the string
-   //char str1[STR_SIZE] = "PID    process is running exclusively using the video display...";
-   //char str2[STR_SIZE] = "                                                                ";
-   char str1[STR_SIZE] = "PID    ";
-   char str2[STR_SIZE] = "       ";
+   char str1[STR_SIZE] = "PID    process is running exclusively using the video display...";
+   char str2[STR_SIZE] = "                                                                ";
 
    str1[4] = '0' + my_pid / 10;  // show my PID
    str1[5] = '0' + my_pid % 10;
@@ -74,10 +72,10 @@ void UserProc(void) {
 	  WriteCall(STDOUT, str1);
 	  WriteCall(which_term, str1);    
 	  WriteCall(which_term, "\n\r");
-      SleepCall(500);                              // sleep .5 sec
+      SleepCall(50);                              // sleep .5 sec
 
 	  WriteCall(STDOUT, str2);
-      SleepCall(500);
+      SleepCall(50);
 	  //MuxOpCall(vid_mux, UNLOCK); 
 	  
    }

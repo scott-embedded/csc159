@@ -120,8 +120,10 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       	 TermSR(1);
 	 	 outportb(PIC_CONTROL, TERM1_DONE);
          break;
-	  
-	  	 
+	  default:		//error, we didn't catch something!
+	     breakpoint();
+		 break;
+		   	 
    }       
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
    if (cons_kbhit()) {            // check if keyboard pressed
