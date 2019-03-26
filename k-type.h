@@ -45,10 +45,13 @@ typedef struct {
 } mux_t;
 
 typedef struct {
-   	int tx_missed;   // when initialized or after output last char
-    int io_base;     // terminal port I/O base #
-    int out_mux;     // flow-control mux
-   	q_t out_q;       // characters to send to terminal buffered here
+   	int tx_missed;   	// when initialized or after output last char
+    int io_base;     	// terminal port I/O base #
+    int out_mux;     	// flow-control mux
+   	q_t out_q;       	// characters to send to terminal buffered here
+	q_t in_q;     		// to buffer terminal KB input
+	q_t echo_q;   		// to echo back to terminal
+	int in_mux;   		// to flow-control in_q
 } term_t;
 
 #endif

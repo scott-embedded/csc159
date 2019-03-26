@@ -151,5 +151,17 @@ void TermTxSR(int term_no) {
 }
 
 void TermRxSR(int term_no) {
-	return;
-}
+	  char ch = inportb(term[term_no].io_base + DATA);		//read a char from the terminal io_base+DATA
+	
+      EnQ(ch, &term[term_no].echo_q);							//enqueue char to the terminal echo_q
+      if (ch == '\r') {											//if char is CR -> also enqueue NL to the terminal echo_q
+	  	EnQ('\n', &term[term_no].echo_q);
+	  }
+      if (ch == '\r') {											//if char is CR -> enqueue NUL to the terminal in_q
+      	  EnQ('\0', &term[term_no].in_q);
+      }												
+      else	{													//else -> enqueue char to the terminal in_q
+		  EnQ(ch, &term[term_no].in_q);
+	  }
+      MuxOpSR(term[term_no].out_mux, UNLOCK); 					//unlock the terminal in_mux
+  }
