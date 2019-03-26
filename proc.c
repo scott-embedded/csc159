@@ -2,18 +2,20 @@
 // all user processes are coded here
 // processes do not R/W kernel data or code, must use sys-calls
 
-
 #include "k-const.h"   // LOOP
 #include "sys-call.h"  // all service calls used below
 #include "k-data.h"
 #include "k-lib.h"
-#include "k-include.h"  
+#include "k-include.h"
 
-void InitTerm(int term_no) {  
+void InitTerm(int term_no) {
    int i, j;
 
    Bzero((char *)&term[term_no].out_q, sizeof(q_t));
+   Bzero((char *)&term[term_no].in_q, sizeof(q_t));      // <------------- new
+   Bzero((char *)&term[term_no].echo_q, sizeof(q_t));    // <------------- new
    term[term_no].out_mux = MuxCreateCall(Q_SIZE);
+   term[term_no].in_mux = MuxCreateCall(0);              // <------------- new
 
    outportb(term[term_no].io_base+CFCR, CFCR_DLAB);             // CFCR_DLAB is 0x80
    outportb(term[term_no].io_base+BAUDLO, LOBYTE(115200/9600)); // period of each of 9600 bauds
@@ -32,55 +34,44 @@ void InitTerm(int term_no) {
       outportb(term[term_no].io_base+DATA, '\r');
       for(i=0; i<LOOP/30; i++)asm("inb $0x80");
    }
-/*
-   inportb(term_term_no].io_base); // clear key cleared PROCOMM screen
+/*  // uncomment this part for VM (Procomm logo needs a key pressed, here reads it off)
+   inportb(term[term_no].io_base); // clear key cleared PROCOMM screen
    for(i=0; i<LOOP/2; i++)asm("inb $0x80");
 */
 }
 
 void InitProc(void) {
    int i;
-   vid_mux = MuxCreateCall(1);	//initialize mutex flag value to 1
-   
-   InitTerm(0); 
-   InitTerm(1); 
-   
+
+   vid_mux = MuxCreateCall(1);  // create/alloc a mutex, flag init 1
+
+   InitTerm(0);
+   InitTerm(1);
+
    while(1) {
       ShowCharCall(0, 0, '.');
-      for(i=0; i<LOOP/2; i++) asm("inb $0x80");   // this is also a kernel service
+      for(i=0; i<LOOP/2; i++) asm("inb $0x80");  // this can also be a kernel service
 
       ShowCharCall(0, 0, ' ');
-      for(i=0; i<LOOP/2; i++) asm("inb $0x80");   // this is also a kernel service
+      for(i=0; i<LOOP/2; i++) asm("inb $0x80");
    }
 }
 
 void UserProc(void) {
-   int which_term;
+   int device;
    int my_pid = GetPidCall();  // get my PID
-   
-    //Build the string
-   char str1[STR_SIZE] = "PID    process is running exclusively using the video display...";
-   char str2[STR_SIZE] = "                                                                ";
+
+   char str1[STR_SIZE] = "PID    > ";         // <-------------------- new
+   char str2[STR_SIZE];                       // <-------------------- new
 
    str1[4] = '0' + my_pid / 10;  // show my PID
    str1[5] = '0' + my_pid % 10;
 
-   which_term = my_pid % 2 == 1 ? TERM0_INTR : TERM1_INTR; // <---- new
-   
-   while(1) {
-	  //MuxOpCall(vid_mux, LOCK); 
-	  WriteCall(STDOUT, str1);
-	  WriteCall(which_term, str1);    
-	  WriteCall(which_term, "\n\r");
-      SleepCall(50);                              // sleep .5 sec
+   device = my_pid % 2 == 1? TERM0_INTR : TERM1_INTR;
 
-	  WriteCall(STDOUT, str2);
-      SleepCall(50);
-	  //MuxOpCall(vid_mux, UNLOCK); 
-	  
+   while(1) {
+      WriteCall(device, str1);  // prompt for terminal input     <-------------- new
+      ReadCall(device, str2);   // read terminal input           <-------------- new
+      WriteCall(STDOUT, str2);  // show what input was to PC     <-------------- new
    }
 }
-
-
-
-

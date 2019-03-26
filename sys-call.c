@@ -88,8 +88,6 @@ void WriteCall(int device, char *str) {
 		else if (device == TERM1_INTR)
 			term_no = 1;
 		
-
-		
 		//while what str points to is not a null character 
 		while (*str != '\0') {
 		  MuxOpCall(term[term_no].out_mux, LOCK);  	//lock the output mutex of the terminal interface data structure
