@@ -24,7 +24,7 @@ int DeQ(q_t *p) { // return -1 if q[] is empty
    int i, ret;
 
    if(QisEmpty(p)) {
-      cons_printf("Panic: queue is full, cannot DeQ!\n");
+      cons_printf("Panic: queue is empty, cannot DeQ!\n");
       return NONE;
    }
    

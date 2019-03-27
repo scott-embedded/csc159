@@ -107,6 +107,7 @@ void WriteCall(int device, char *str) {
 }
 
 void ReadCall(int device, char *str) {
+	
 	//determine which term_no (similar to how WriteCall did in the previous phase)
 	int count = 0; //number of chars gathered so far = 0
 	int term_no;
@@ -119,16 +120,15 @@ void ReadCall(int device, char *str) {
 	while (1) {
 		char ch;
 		MuxOpCall(term[term_no].in_mux, LOCK);  	//   A. lock the in_mux of the terminal
-		ch = DeQ(&term[term_no].out_q);		//   B. dequeue a char from out_q of the terminal
-		str = ch;									//   C. set where the str points to to char
+		ch = DeQ(&term[term_no].in_q);				//   B. dequeue a char from in_q of the terminal
+		*str = ch;									//   C. set where the str points to to char
 		if (ch == '\0') {							//   D. if char is NUL -> return
 			return;
 		}			
 		str++;										//   E. advance both str pointer and char count
 		count++;
-		
-		if (count == STR_SIZE - 1) {					//   F. if char count is at the last available space of the given string:
-			str[count] = '\0';								//      a. set where str points to to NUL
+		if (count == STR_SIZE) {					//   F. if char count is at the last available space of the given string:
+			*str = '\0';								//      a. set where str points to to NUL
 			return;									//      b. return
 		}
 	}
