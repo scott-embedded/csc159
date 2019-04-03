@@ -136,17 +136,21 @@ void TermSR(int term_no) {
 
 void TermTxSR(int term_no) {
 	char ch;
-	if (QisEmpty(&term[term_no].out_q)) { 			//if the out_q in terminal interface data structure is empty:
+	if (QisEmpty(&term[term_no].out_q)&&QisEmpty(&term[term_no].echo_q)) { 			//if the out_q in terminal interface data structure is empty:
 		term[term_no].tx_missed = TRUE;				//1. set the tx_missed flag to TRUE
 		return;										//2. return
 	}
 	else {	
-		
-		ch = DeQ(&term[term_no].out_q);					//1. get 1st char from out_q
+		if(!QisEmpty(&term[term_no].echo_q)){
+      ch = DeQ(&term[term_no].echo_q);
+    }
+    else{
+		  ch = DeQ(&term[term_no].out_q);
+      MuxOpSR(term[term_no].out_mux, UNLOCK); 				//4. unlock the out_mux of the terminal interface data structure
+    }
 		//cons_printf("%c ", ch);
       	outportb(term[term_no].io_base + DATA, ch);		//2. use outportb() to send it to the DATA (0 in rs232.h) register of the terminal port N
       	term[term_no].tx_missed = FALSE;								//3. set the tx_missed flag to FALSE
-      	MuxOpSR(term[term_no].out_mux, UNLOCK); 				//4. unlock the out_mux of the terminal interface data structure
 		
 	}
 }
