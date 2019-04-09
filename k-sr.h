@@ -16,5 +16,8 @@ void MuxOpSR(int mux_id, int opcode);
 void TermSR(int term_no);
 void TermTxSR(int term_no);
 void TermRxSR(int term_no);
+int ForkSR(void);
+int WaitSR(void);
+void ExitSR(int code);
 
 #endif

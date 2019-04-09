@@ -59,6 +59,7 @@ void InitProc(void) {
 
 void UserProc(void) {
    int device;
+   int child, exit;
    int my_pid = GetPidCall();  // get my PID
 
    char str1[STR_SIZE] = "PID    > ";         // <-------------------- new
@@ -70,8 +71,47 @@ void UserProc(void) {
    device = my_pid % 2 == 1? TERM0_INTR : TERM1_INTR;
 
    while(1) {
-      WriteCall(device, str1);  // prompt for terminal input     <-------------- new
-      ReadCall(device, str2);   // read terminal input           <-------------- new
-      WriteCall(STDOUT, str2);  // show what input was to PC     <-------------- new
+      WriteCall(device, str1);  // prompt for terminal input
+      ReadCall(device, str2);   // read terminal input
+      WriteCall(STDOUT, str2);  // show what input was to PC
+
+      if(StrCmp(str2, "fork") == FALSE){
+        continue;
+      }
+      child = ForkCall();
+      if(child == NONE){
+        WriteCall(STDOUT, "Couldn't fork!");
+      }
+      else if(child == 0){
+        Aout(device);
+      }
+      else{
+        WriteCall(device, Itoa(child));
+        WriteCall(device, "\n\r");
+        exit = WaitCall();
+        WriteCall(device, Itoa(exit);
+        WriteCall(device, "\n\r");
+      }
    }
+}
+
+void Aout(int device){
+  int my_pid;
+  char str[] = "xx ( ) Hello, World!\n\r";
+
+  pid = GetPidCall();
+
+  str[0] = '0' + my_pid / 10;  // show my PID
+  str[1] = '0' + my_pid % 10;
+  str[5] = Itoa(my_pid) + 17;
+
+  WriteCall(device, str);
+
+  for(i = 0; i < 70; i++){
+    ShowCharCall(my_pid, i, Itoa(my_pid) + 17);
+    SleepCall(10);
+    ShowCharCall(my_pid, i, ' ');
+   }
+
+  ExitCall(my_pid * 100);
 }

@@ -5,7 +5,9 @@
 
 
 
-
+#define FORK_CALL 53
+#define WAIT_CALL 54
+#define EXIT_CALL 55
 #define GETPID_CALL 48
 #define SHOWCHAR_CALL 49
 #define SLEEP_CALL 50

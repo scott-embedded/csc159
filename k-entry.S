@@ -45,6 +45,18 @@ ENTRY(Term1Entry)
    pushl $TERM1_INTR
    jmp PreKernel
 
+ENTRY(ForkEntry)
+   pushl $FORK_CALL
+   jmp PreKernel
+
+ENTRY(WaitEntry)
+   pushl $WAIT_CALL
+   jmp PreKernel
+
+ENTRY(ExitEntry)
+   pushl $EXIT_CALL
+   jmp PreKernel
+
 PreKernel:
    pushal							// push all (8) registers
    movl %esp, %ebx					// copy esp to ebx

@@ -54,3 +54,51 @@ void EnQ(int to_add, q_t *p) {
    p->q[p->tail] = to_add;	//add item to current end
    p->tail++;	//increment tail position
 }
+
+void MemCpy((char *)dst, (char *)src, int size){
+  while(size--){
+    dst = src;
+    *dst++;
+    *src++;
+  }
+}
+
+int StrCmp(char *str1, char *str2){
+  int compare = 1;
+  while(1)
+  {
+    if(str1 != str2){
+      compare = 0;
+      break;
+    }
+    if(str1 = '\0'){
+      break;
+    }
+    *str1 ++;
+    *str2 ++;
+  }
+
+  return compare;
+}
+
+void Itoa(char *str, int x){
+  int size = 0;
+  while(x > 0){
+    str = 48 + x%10;
+    *str++;
+    x = x/10;
+    size++;
+  }
+  reverse(*str, size);
+  void reverse(char *str, int upper){
+    char hold;
+    int lower = 0;
+    while (lower < upper){
+      hold = str[lower];
+      str[lower] = str[upper];
+      str[upper] = hold;
+      lower ++;
+      upper --;
+    }
+  }
+}  

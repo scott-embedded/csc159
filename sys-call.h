@@ -9,5 +9,8 @@ void SleepCall(int centi_sec);
 int MuxCreateCall(int);
 void MuxOpCall(int, int);
 void WriteCall(int, char *);
+int ForkCall(void);
+int WaitCall(void);
+void ExitCall(int code);
 
 #endif

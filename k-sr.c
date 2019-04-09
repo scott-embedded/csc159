@@ -169,4 +169,11 @@ void TermRxSR(int term_no) {
 		  EnQ(ch, &term[term_no].in_q);
 	  }
       MuxOpSR(term[term_no].in_mux, UNLOCK); 					//unlock the terminal in_mux
-  }
+}
+int ForkSR(void){
+}
+int WaitSR(void){
+}
+void ExitSR(int code){
+}
+

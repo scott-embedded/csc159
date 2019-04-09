@@ -7,7 +7,7 @@
 
 typedef void (*func_p_t)(void); // void-return function pointer type
 
-typedef enum {UNUSED, READY, RUN, SLEEP, SUSPEND} state_t;  
+typedef enum {UNUSED, READY, RUN, SLEEP, SUSPEND, ZOMBIE, WAIT} state_t;  
 
    
 typedef struct {
@@ -31,6 +31,7 @@ typedef struct {
    int total_count;
    trapframe_t *trapframe_p;
    int wake_centi_sec;
+   int ppid;
 } pcb_t;                     
 
 typedef struct {             // generic queue type

@@ -65,6 +65,43 @@ void MuxOpCall(int mux_id, int opcode) {
  	); 
 }
 
+int ForkCall(){
+   int fork;
+
+   asm("int %1;             // interrupt!
+        movl %%eax, %0"     // after, copy eax to variable 'pid'
+       : "=g" (fork)         // output
+       : "g" (FORK_CALL)  // input
+       : "eax"              // used registers
+   );
+
+   return fork;
+}
+
+int WaitCall(){
+   int code;
+
+   asm("int %1;             // interrupt!
+        movl %%eax, %0"     // after, copy eax to variable 'pid'
+       : "=g" (code)         // output
+       : "g" (WAIT_CALL)  // input
+       : "eax"              // used registers
+   );
+
+   return code;
+
+}
+
+void ExitCall(int code){
+      asm("movl %0, %%eax;
+           int %1"     // after, copy eax to variable 'pid'
+       :         // output
+       : "g" (code), "g" (EXIT_CALL)  // input
+       : "eax"              // used registers
+   ); //for now, but please adjust this into more asm 
+
+}
+
 void WriteCall(int device, char *str) {
     int row = GetPidCall();  //to set row number (need to run demo to find out how this is supposed to behave)
     int col = 0;  //column is set zero
