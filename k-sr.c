@@ -175,5 +175,20 @@ int ForkSR(void){
 int WaitSR(void){
 }
 void ExitSR(int code){
+  int ppid = pcb[run_pid].ppid
+  if(pcb[ppid].state != WAIT){
+    pcb[run_pid].state = ZOMBIE;
+    run_pid = NONE;
+    return;
+  }
+
+  pcb[ppid].state = READY;
+  EnQ(ready_q, ppid);
+  pcb[ppid].trapframe_p->eax = code;
+
+  pcb[run_pid].state = UNUSED;
+  ENQ(pid_q, run_pid);
+  run_pid = NONE;
+ 
 }
 
