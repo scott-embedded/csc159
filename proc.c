@@ -65,13 +65,13 @@ void UserProc(void) {
 
    char str1[STR_SIZE] = "PID    > ";         // <-------------------- new
    char str2[STR_SIZE];                       // <-------------------- new
-   char str3[10];
+   char str3[10] = "         ";
 
    str1[4] = '0' + my_pid / 10;  // show my PID
    str1[5] = '0' + my_pid % 10;
 
    device = my_pid % 2 == 1 ? TERM0_INTR : TERM1_INTR;
-   cons_printf("first calculation device = %i\n", device);
+   //cons_printf("first calculation device = %i\n", device);
 
    while(1) {
       WriteCall(device, str1);  // prompt for terminal input
@@ -86,23 +86,25 @@ void UserProc(void) {
       if(child == NONE){
         WriteCall(STDOUT, "Couldn't fork!");
       }
-      else if(child == 0){
-		cons_printf("Got into child code\n");
-		cons_printf("Calling Aout with device = %i\n", device);
-		device = TERM0_INTR;
+      else if (child == 0){
+		//cons_printf("Got into child code\n");
+		//cons_printf("Calling AOut with device = %i\n", device);
+		//device = TERM1_INTR;
         Aout(device);
       }
 	  
       else {	
-		  cons_printf("Parent device = %i\n", device);
-		cons_printf("Got into parent code\n");
+		//cons_printf("Parent device = %i\n", device);
+		//cons_printf("Got into parent code\n");
 		Itoa(str3, child);
         WriteCall(device, str3);
         WriteCall(device, "\n\r");
         exit = WaitCall();
+		Bzero(str3, sizeof(str3));
 	 	Itoa(str3, exit);
 		WriteCall(device, str3);
         WriteCall(device, "\n\r");
+		Bzero(str3, sizeof(str3));
       }
    }
 }
@@ -113,22 +115,22 @@ void Aout(int device){
   int i;
   char str[STR_SIZE] = "xx ( ) Hello, World!\n\r";
 
-	cons_printf("entered Aout()\n");
+	//cons_printf("entered Aout()\n");
   my_pid = GetPidCall();
-    cons_printf("my_pid = %i\n", my_pid);
+    //cons_printf("my_pid = %i\n", my_pid);
   str[0] = '0' + my_pid / 10;  // show my PID
   str[1] = '0' + my_pid % 10;
   str[4] = my_pid + 66;
-  cons_printf("calling WriteCall(), device = %i, str = %s\n", device, str);
+  //cons_printf("calling WriteCall(), device = %i, str = %s\n", device, str);
   WriteCall(device, str);
-  cons_printf("exited WriteCall()\n");
+  //cons_printf("exited WriteCall()\n");
 
   for(i = 0; i < 70; i++){
     ShowCharCall(my_pid, i, my_pid + 66);
     SleepCall(10);
     ShowCharCall(my_pid, i, ' ');
    }
-	cons_printf("calling ExitCall()\n");
+	//cons_printf("calling ExitCall()\n");
   ExitCall(my_pid * 100);
-  cons_printf("exiting ExitCall()\n");
+  //cons_printf("exiting ExitCall()\n");
 }

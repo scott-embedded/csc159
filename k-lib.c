@@ -81,24 +81,28 @@ int StrCmp(char *str1, char *str2){
   return compare;
 }
 
-void Itoa(char *str, int x){
-  int size = 0;
-  while(x > 0){
-    *str = 48 + x%10;
-    str++;
-    x = x/10;
-    size++;
-  }
-  reverse(str, size);
-}  
-void reverse(char *str, int upper){
+void reverse(char *str, int upper) {
+	
     char hold;
     int lower = 0;
     while (lower < upper){
       hold = str[lower];
       str[lower] = str[upper];
       str[upper] = hold;
-      lower ++;
-      upper --;
+      lower++;
+      upper--;
     }
 }
+
+void Itoa(char *str, int x){
+  int size = 0;
+  while (x > 0){
+    *str = 48 + x % 10;
+    str++;
+    x = x / 10;
+    size++;
+  }
+  str -= size;
+  reverse(str, size - 1);
+}  
+

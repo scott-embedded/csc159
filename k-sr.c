@@ -175,7 +175,6 @@ void TermRxSR(int term_no) {
 
 int ForkSR(void) {
 	
-	
 	int c_pid;
 	int difference;
 	int *p;
@@ -194,22 +193,22 @@ int ForkSR(void) {
 	EnQ(c_pid, &ready_q);      								//f. enqueue the child PID to ...
 
 	difference = PROC_STACK_SIZE * (c_pid - run_pid);     									//g. get the difference between the locations of the child's stack and the parent's
+
 	
-	
-	
-	cons_printf("difference =  %X\n", difference);
-	cons_printf("pcb[run_pid].trapframe_p =  %X\n", pcb[run_pid].trapframe_p);
+	//cons_printf("difference =  %X\n", difference);
+	//cons_printf("pcb[run_pid].trapframe_p =  %X\n", pcb[run_pid].trapframe_p);
 	
 	
 	//pcb[c_pid].trapframe_p = pcb[run_pid].trapframe_p + (difference / sizeof(trapframe_t));     					//h. copy the parent's trapframe_p to the child's trapframe_p
 	//opt = (tcp_option_t *)((char*)opt+1);
-	pcb[c_pid].trapframe_p = (trapframe_t*)((char*)pcb[run_pid].trapframe_p + difference);	     					//h. copy the parent's trapframe_p to the child's trapframe_p
-	cons_printf("pcb[c_pid].trapframe_p =  %X\n", pcb[c_pid].trapframe_p);      																					//   (with the location adjustment applied to the new trapframe_p)
+	//pcb[c_pid].trapframe_p = (trapframe_t*)((char*)pcb[run_pid].trapframe_p + difference);	     					//h. copy the parent's trapframe_p to the child's trapframe_p
+	pcb[c_pid].trapframe_p = (trapframe_t*)( (int) pcb[pcb[ c_pid ].ppid].trapframe_p + difference);
+	//cons_printf("pcb[c_pid].trapframe_p =  %X\n", pcb[c_pid].trapframe_p);      																					//   (with the location adjustment applied to the new trapframe_p)
 	
 	
 	
 	
-	memcpy(&proc_stack[c_pid][0], &proc_stack[run_pid][0], PROC_STACK_SIZE);      				//i. copy the parent's proc stack to the child (use your own MemCpy())
+	MemCpy((char*)&proc_stack[c_pid], (char*)&proc_stack[pcb[c_pid].ppid], PROC_STACK_SIZE);      				//i. copy the parent's proc stack to the child (use your own MemCpy())
 	//MemCpy(&proc_stack[c_pid], &proc_stack[run_pid], sizeof(proc_stack[c_pid]));      				//i. copy the parent's proc stack to the child (use your own MemCpy())
 	pcb[c_pid].trapframe_p->eax = 0;      													//j. set the eax in the new trapframe to 0 (child proc gets 0 from ForkCall)
 	//cons_printf("ebp before adding difference = %X\n", pcb[c_pid].trapframe_p->ebp);
@@ -218,18 +217,18 @@ int ForkSR(void) {
 	//cons_printf("ebp after adding difference = %X\n", pcb[c_pid].trapframe_p->ebp);
 	pcb[c_pid].trapframe_p->esi += difference;
 	pcb[c_pid].trapframe_p->edi += difference;
-	p = pcb[c_pid].trapframe_p->ebp;     			//l. set an integer pointer p to ebp in the new trapframe
+	p = (int*)pcb[c_pid].trapframe_p->ebp;     			//l. set an integer pointer p to ebp in the new trapframe
 	//cons_printf("\npre while: *p = %X\n", *p);
 	//cons_printf("pre while: p = %X\n", p);
 	//cons_printf("About to enter while loop...\n");
 	while (*p != 0) {      					//m. while (what p points to is not 0) {
-		*p -= difference;					//      1. apply the location adjustment to the value pointed
-		cons_printf("\n*p = %X\n", *p);
+		*p += difference;					//      1. apply the location adjustment to the value pointed
+		//cons_printf("\n*p = %X\n", *p);
 	    p = (int*)*p;						//      2. set p to the adjusted value (need a typecast)
-		cons_printf("p = %X\n", p);
+		//cons_printf("p = %X\n", p);
 	}   
 	//cons_printf("Left...\n");   				
-	breakpoint();
+	//breakpoint();
 	return c_pid;      				//n. return child PID
 }
 
