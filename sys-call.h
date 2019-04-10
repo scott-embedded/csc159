@@ -12,5 +12,6 @@ void WriteCall(int, char *);
 int ForkCall(void);
 int WaitCall(void);
 void ExitCall(int code);
+void ReadCall(int device, char *str);
 
 #endif

@@ -6,5 +6,6 @@
 void InitProc(void);
 void UserProc(void);
 void InitTerm(int term_no);
+void Aout(int device);
 
 #endif
