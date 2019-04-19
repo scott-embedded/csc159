@@ -13,5 +13,6 @@ int ForkCall(void);
 int WaitCall(void);
 void ExitCall(int code);
 void ReadCall(int device, char *str);
-
+void ExecCall(int code, int arg);
+void SignalCall(int sig_num, int handler);
 #endif

@@ -9,6 +9,7 @@
 #define WAIT_CALL 54
 #define EXIT_CALL 55
 #define GETPID_CALL 48
+
 #define SHOWCHAR_CALL 49
 #define SLEEP_CALL 50
 #define MUX_CREATE_CALL 51
@@ -46,5 +47,12 @@
 
 #define VID_MASK 0x0f00     // foreground bright white, background black
 #define VID_HOME (unsigned short *)0xb8000 // home position, upper-left corner
+
+#define EXEC_CALL 56		// for ExecCall(), for child process to run its own code
+#define SIGNAL_CALL 57		// for SignalCall(), to request a signal-handler service
+#define SIGINT 3			//CTRL-C (ASCII 3)
+#define PAGE_NUM 20			//OS has 20 DRAM pages (to experiment with)
+#define PAGE_SIZE 4096 		//each DRAM page is 4KB
+#define RAM 0xe00000		//DRAM starts at 14MB
 
 #endif

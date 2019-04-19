@@ -56,6 +56,14 @@ ENTRY(WaitEntry)
 ENTRY(ExitEntry)
    pushl $EXIT_CALL
    jmp PreKernel
+   
+ENTRY(ExecEntry)
+   pushl $EXEC_CALL
+   jmp PreKernel
+   
+ENTRY(SignalEntry)
+   pushl $SIGNAL_CALL
+   jmp PreKernel
 
 PreKernel:
    pushal							// push all (8) registers

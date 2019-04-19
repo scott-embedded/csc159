@@ -16,7 +16,7 @@ extern pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 extern char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
 extern mux_t mux[MUX_SIZE];				//kernel has these mutexes to spar
 extern term_t term[TERM_SIZE];
-
+extern int page_user[PAGE_NUM];
 
 #endif                         // endif of ifndef
 

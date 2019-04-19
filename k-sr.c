@@ -3,7 +3,7 @@
 #include "k-include.h"
 #include "k-type.h"
 #include "k-data.h"
-#include "k-lib.h"
+#include "tools.h"
 #include "k-sr.h"
 #include "sys-call.h"
 #include "spede/stdio.h"
@@ -156,6 +156,8 @@ void TermTxSR(int term_no) {
 }
 
 void TermRxSR(int term_no) {
+	  int device;
+	  int process;
 	  char ch = inportb(term[term_no].io_base + DATA);		//read a char from the terminal io_base+DATA
       EnQ(ch, &term[term_no].echo_q);							//enqueue char to the terminal echo_q
       if (ch == '\r') {											//if char is CR -> also enqueue NL to the terminal echo_q
@@ -163,11 +165,41 @@ void TermRxSR(int term_no) {
 	  }
 	  
       if (ch == '\r') {											//if char is CR -> enqueue NUL to the terminal in_q  
-      	  EnQ('\0', &term[term_no].in_q);
-      }												
+      	EnQ('\0', &term[term_no].in_q);
+      }
+	  
+	  //when all three below are true:
+      //1. the input character is ASCII 3 (CTRL-C)
+      //2. there is a process suspended by the in_mux of the terminal
+      //3. the suspended process has a sigint_handler in its PCB
+	  
+	  if (ch == 3)  {	//CTRL+C is ascii 3 (1st condition)
+		  cons_printf("ctrl + c captured\n");
+		  if (QisEmpty(&mux[term[term_no].in_mux].suspend_q)) {
+			  cons_printf("suspend_q was empty... returning\n");
+			  return; //2nd condition does not hold true, return	
+		  }
+		  
+		  process = mux[term[term_no].in_mux].suspend_q.q[0];	
+		  cons_printf("assigned process #%i\n", process);
+		  if (pcb[process].sigint_handler) {		//(check 3rd condition)
+			  cons_printf("sigint_handler detected\n");
+			  //WrapperSR is called with 3 arguments:
+			  //a. the suspended pid (read it, but do not dequeued it from suspend_q)
+			  //b. the sigint_handler of the pid
+			  //c. the current device (TERM0_INTR/TERM1_INTR, depending on term_no)
+			  device = term_no == 0 ? TERM0_INTR : TERM1_INTR;	//determine device 
+			  cons_printf("calling wrapper...\n");
+			  WrapperSR(process, pcb[process].sigint_handler, device);
+			  
+		  }	  
+	  }
+	  								
       else	{													//else -> enqueue char to the terminal in_q
 		  EnQ(ch, &term[term_no].in_q);
 	  }
+	  
+	  
       MuxOpSR(term[term_no].in_mux, UNLOCK); 					//unlock the terminal in_mux
 }
 
@@ -218,6 +250,7 @@ int WaitSR(void) {
 	int i;
 	int match;
 	int exit_code;
+	int page_cnt;
 	match = -1;
 	
 	for (i = 0; i < PROC_SIZE; i++) {								// loop thru the PCB array (looking for a ZOMBIE child):
@@ -238,6 +271,17 @@ int WaitSR(void) {
 														//reclaim child's resources: 
         pcb[match].state = UNUSED;						//1. alter its state to ... 
         EnQ(match, &pid_q);    							//2. enqueue its PID to ...
+		page_cnt = 0;
+	    for (i = 0; i < PAGE_NUM; i++) {
+	    	if (page_user[i] == match) {
+	    		page_user[i] = NONE;		//set page to current run_pid
+				page_cnt++;
+	    	}
+		
+			if (page_cnt == 2) {
+				break;
+			}	
+	    } 
 	}
 
     return exit_code;		//return the exit code
@@ -246,6 +290,7 @@ int WaitSR(void) {
 
 
 void ExitSR (int code) { 
+  int page_cnt, i;
   int ppid = pcb[run_pid].ppid;
   if (pcb[ppid].state != WAIT) {			//if the process state of my parent (ppid) is not WAIT:
     pcb[run_pid].state = ZOMBIE;			//1. alter my state to ...
@@ -260,6 +305,127 @@ void ExitSR (int code) {
   pcb[run_pid].state = UNUSED;				//1. alter its state to ...
   EnQ(run_pid, &pid_q);						//2. enqueue its PID to ...
   run_pid = NONE;							//3. reset run_pid to ...
+  page_cnt = 0;
+  for (i = 0; i < PAGE_NUM; i++) {
+  	if (page_user[i] == run_pid) {
+  		page_user[i] = NONE;		//set page to current run_pid
+		page_cnt++;
+  	}
+
+	if (page_cnt == 2) {
+		break;
+	}	
+  } 
  
 }
 
+
+
+
+void ExecSR(int code, int arg) {
+	
+	int i, page1, page2, page_cnt;
+	char *code_page_addr;
+	char *stack_page_addr;
+	
+	//cons_printf("entered ExecSR\n");
+	
+	page_cnt = 0;	// track # of pages we assigned
+
+   	//1. Allocate two DRAM pages, one for code, one for stack space:
+   	//   loop thru page_user[] for two pages that are currently used
+   	//   by NONE. Once found, set their user to run_pid.
+    for (i = 0; i < PAGE_NUM; i++) {
+    	if (page_user[i] == NONE) {
+    		page_user[i] = run_pid;		//set page to current run_pid
+			page_cnt++;
+    	}
+		
+		if (page_cnt == 1) {
+			page1 = i;	//remember the index of the page we set (code space)
+		}	
+		else if (page_cnt == 2) {	
+			page2 = i;	//remember the index of the page we set (stack space)
+			break;		//we assigned two pages, break out of for loop
+		}
+			
+    }  		
+	
+	//2. To calcuate page address = i * PAGE_SIZE + where DRAM begins,
+   	//   where i is the index of the array page_user[]
+	code_page_addr = (char*)(page1 * PAGE_SIZE + RAM);
+	stack_page_addr = (char*)(page2 * PAGE_SIZE + RAM);
+
+    	
+	//3. Copy PAGE_SIZE bytes from 'code' to the allocated code page,
+   	//   with your own MemCpy().
+	MemCpy(code_page_addr, (char*)code, PAGE_SIZE);
+
+	//4. Bzero the allocated stack page.
+    Bzero(stack_page_addr, PAGE_SIZE);
+	
+	//5. From the top of the stack page, copy 'arg' there. 
+	stack_page_addr = stack_page_addr + PAGE_SIZE - sizeof(int);	//move pointer to top of stack (sub 4 to be in last int position at top of our stack)
+	//*stack_page_addr = arg;								//copy arg over
+	MemCpy(stack_page_addr, (char*)&arg, sizeof(int)); 
+	    	
+	//6. Skip a whole 4 bytes (return address, size of an integer).
+	stack_page_addr -= sizeof(int)*2;
+	stack_page_addr -= sizeof(trapframe_t);
+	
+	
+	
+	//tf_loc = (int)pcb[run_pid].trapframe_p;
+	
+	MemCpy(stack_page_addr, (char*)pcb[run_pid].trapframe_p, sizeof(trapframe_t));
+	
+	
+
+	//7. Lower the trapframe address in PCB of run_pid by the size of
+   	//   two integers.
+			//pcb[run_pid].trapframe_p = (trapframe_t*)( stack_page_addr - 8);	//removed this because we are already decrementing this pointer!
+	pcb[run_pid].trapframe_p = (trapframe_t*)( stack_page_addr);	//set TF to correct position
+	
+	//8. Decrement the trapframe pointer by 1 (one whole trapframe).
+			//this moves the TF pointer to the bottom of the TF
+	
+	//9. Use the trapframe pointer to set efl and cs (as in NewProcSR)
+	pcb[run_pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
+    pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
+	
+	//10. However, set the eip to the start of the new code page.
+	pcb[run_pid].trapframe_p->eip = (int)code;                        // set to code
+	
+}
+   
+void SignalSR(int sig_num, int handler) {
+	cons_printf("entered SignerSR...\n");
+    pcb[run_pid].sigint_handler =  handler; //Just set sigint_handler in PCB of run_pid to handler.
+   cons_printf("leaving SignalSR...\n");
+      //The sig_num will be used in the next phase to differ
+      //for different signals.
+}
+
+void WrapperSR(int pid, int handler, int arg) {
+   int *p;	//track our position
+   trapframe_t temp_trap;
+   MemCpy((char*)&temp_trap, (char*)pcb[pid].trapframe_p, sizeof(trapframe_t));
+
+	cons_printf("entered WrapperSR...\n");
+   //Lower the trapframe address by the size of 3 integers.
+   p = (int*) pcb[pid].trapframe_p;
+   
+   //Fill the space of the vacated 3 integers with (from top):
+   //   'arg' (2nd arg to Wrapper)
+   //   'handler' (1st arg to Wrapper)
+   //   'eip' in the original trapframe (UserProc resumes)
+   //   (Below them is the original trapframe.)
+   *--p = arg;										//decrement pointer and then assign variable
+   *--p = handler;									//decrement pointer and then assign variable
+   *--p = pcb[run_pid].trapframe_p->eip;			//decrement pointer and then assign variable (Change eip in the trapframe to Wrapper to run it 1st.)
+   pcb[pid].trapframe_p = (trapframe_t*)p;		//Change trapframe location info in the PCB of this pid.
+   MemCpy((char*)p, (char*)&temp_trap, sizeof(trapframe_t));
+   
+   cons_printf("Leaving WrapperSR...\n");
+   
+}

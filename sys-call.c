@@ -5,7 +5,7 @@
 #include <spede/stdio.h>
 #include <spede/flames.h>
 #include "k-data.h"
-#include "k-lib.h"
+#include "tools.h"
 #include "k-sr.h"
 
 int GetPidCall(void) {
@@ -169,4 +169,24 @@ void ReadCall(int device, char *str) {
 			return;									//      b. return
 		}
 	}
+}
+
+void ExecCall(int code, int arg) {
+    asm("movl %0, %%eax;
+		movl %1, %%ebx;
+         int %2"     // after, copy eax to variable 'pid'
+     :         // output
+     : "g" (code), "g" (arg), "g" (EXEC_CALL)  // input
+     : "eax", "ebx"              // used registers
+ 	); 
+}
+
+void SignalCall(int sig_num, int handler) {
+    asm("movl %0, %%eax;
+		movl %1, %%ebx;
+         int %2"     // after, copy eax to variable 'pid'
+     :         // output
+     : "g" (sig_num), "g" (handler), "g" (SIGNAL_CALL)  // input
+     : "eax", "ebx"              // used registers
+ 	); 
 }

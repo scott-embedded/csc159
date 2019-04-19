@@ -5,7 +5,7 @@
 #include "k-const.h"   // LOOP
 #include "sys-call.h"  // all service calls used below
 #include "k-data.h"
-#include "k-lib.h"
+#include "tools.h"
 #include "k-include.h"
 #include "proc.h"
 
@@ -73,6 +73,8 @@ void UserProc(void) {
    device = my_pid % 2 == 1 ? TERM0_INTR : TERM1_INTR;
    //cons_printf("first calculation device = %i\n", device);
 
+   SignalCall(SIGINT, Ouch);
+   
    while(1) {
       WriteCall(device, str1);  // prompt for terminal input
       ReadCall(device, str2);   // read terminal input
@@ -90,7 +92,9 @@ void UserProc(void) {
 	  
 	  // Are we a child?
       else if (child == 0) {
-        Aout(device);
+		ExecCall((int)Aout, device);
+		cons_printf("Exited ExecCall successfully.... (wtf?)");
+        //Aout(device);
       }
 	  
 	  // Otherwise we are a parent
@@ -114,9 +118,11 @@ void Aout(int device){
 	
   int my_pid;
   int i;
+  
   char str[STR_SIZE] = "xx ( ) Hello, World!\n\r";
-
+  cons_printf("Entering Aout....");
   my_pid = GetPidCall();
+
 
   str[0] = '0' + my_pid / 10;  // show my PID
   str[1] = '0' + my_pid % 10;
@@ -130,4 +136,16 @@ void Aout(int device){
     ShowCharCall(my_pid, i, ' ');
    }
   ExitCall(my_pid * 100);
+}
+
+void Ouch(int device) {
+	WriteCall(device, "Can't touch that!\n\r");
+}
+
+void Wrapper(int handler, int arg) {   // args implanted in stack
+	func_p_t2 func = (func_p_t2)handler;
+	asm("pushal");                       // save regs
+	func(arg);                           // call signal handler with arg
+	asm("popal");                        // restore regs
+	asm("movl %%ebp, %%esp; popl %%ebp; ret $8"::); // skip handler & arg
 }

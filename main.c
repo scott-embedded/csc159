@@ -6,7 +6,7 @@
 #include "k-include.h"  // SPEDE includes
 #include "k-entry.h"    // entries to kernel (TimerEntry, etc.)
 #include "k-type.h"     // kernel data types
-#include "k-lib.h"      // small handy functions
+#include "tools.h"      // small handy functions
 #include "k-sr.h"       // kernel service routines
 #include "proc.h"       // all user process code here
 
@@ -23,6 +23,7 @@ term_t term[TERM_SIZE] = {
 	{ TRUE, TERM0_IO_BASE },
 	{ TRUE, TERM1_IO_BASE }
 }; 
+int page_user[PAGE_NUM];
 
 
 void InitKernelData(void) {         // init kernel data
@@ -46,6 +47,11 @@ void InitKernelData(void) {         // init kernel data
    for (i = 0; i < MUX_SIZE; i++)
 	   EnQ(i, &mux_q);
    
+   //Initialize all pages to NONE
+   for (i = 0; i < PAGE_NUM; i++) {
+	   page_user[i] = NONE;
+   }
+   
    run_pid = NONE; 		//set run_pid to NONE
 }
 
@@ -58,9 +64,11 @@ void InitKernelControl(void) {      // init kernel control
    fill_gate(&intr_table[MUX_OP_CALL], (int)MuxOpEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[TERM0_INTR], (int)Term0Entry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[TERM1_INTR], (int)Term1Entry, get_cs(), ACC_INTR_GATE, 0);
-   fill_gate(&intr_table[FORK_CALL], (int)ForkEntry, get_cs(), ACC_INTR_GATE, 0); //fill out intr table for timer
-   fill_gate(&intr_table[WAIT_CALL], (int)WaitEntry, get_cs(), ACC_INTR_GATE, 0); //fill out intr table for timer
-   fill_gate(&intr_table[EXIT_CALL], (int)ExitEntry, get_cs(), ACC_INTR_GATE, 0); //fill out intr table for timer
+   fill_gate(&intr_table[FORK_CALL], (int)ForkEntry, get_cs(), ACC_INTR_GATE, 0); 
+   fill_gate(&intr_table[WAIT_CALL], (int)WaitEntry, get_cs(), ACC_INTR_GATE, 0); 
+   fill_gate(&intr_table[EXIT_CALL], (int)ExitEntry, get_cs(), ACC_INTR_GATE, 0); 
+   fill_gate(&intr_table[EXEC_CALL], (int)ExecEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[SIGNAL_CALL], (int)SignalEntry, get_cs(), ACC_INTR_GATE, 0);
    outportb(PIC_MASK, MASK);                   // mask out PIC for new entries
 }
 
@@ -97,9 +105,9 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
    pcb[run_pid].trapframe_p = trapframe_p; // save it
 
    switch(trapframe_p->entry_id){
-	    case TIMER_INTR:
-	       TimerSR();
-	  	   break;
+	  case TIMER_INTR:
+	     TimerSR();
+	  	 break;
       case SLEEP_CALL:
          SleepSr(trapframe_p->eax);
          break;
@@ -111,17 +119,17 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
          break;
       case MUX_CREATE_CALL:
          trapframe_p->eax = MuxCreateSR(trapframe_p->eax);
-		     break;		 
-	    case MUX_OP_CALL:
-		     MuxOpSR(trapframe_p->eax, trapframe_p->ebx);
-		     break;
+		 break;		 
+	  case MUX_OP_CALL:
+		 MuxOpSR(trapframe_p->eax, trapframe_p->ebx);
+		 break;
       case TERM0_INTR:
          TermSR(0);
-		     outportb(PIC_CONTROL, TERM0_DONE);
-		     break;
+		 outportb(PIC_CONTROL, TERM0_DONE);
+		 break;
       case TERM1_INTR:
       	 TermSR(1);
-	 	     outportb(PIC_CONTROL, TERM1_DONE);
+	 	 outportb(PIC_CONTROL, TERM1_DONE);
          break;
       case FORK_CALL:
          trapframe_p->eax = ForkSR();
@@ -132,9 +140,15 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       case EXIT_CALL:
          ExitSR(trapframe_p->eax);
          break;
-	    default:		//error, we didn't catch something!
-	       breakpoint();
-		     break;
+      case EXEC_CALL:
+         ExecSR(trapframe_p->eax, trapframe_p->ebx);
+         break;
+      case SIGNAL_CALL:
+         SignalSR(trapframe_p->eax, trapframe_p->ebx);
+         break;
+	  default:		//error, we didn't catch something!
+	     breakpoint();
+		 break;
    }       
    //(kb_hit waits for keystroke and then returns its ASCII code, if not ASCII keeps waiting)
    if (cons_kbhit()) {            // check if keyboard pressed

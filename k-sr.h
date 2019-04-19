@@ -19,5 +19,9 @@ void TermRxSR(int term_no);
 int ForkSR(void);
 int WaitSR(void);
 void ExitSR(int code);
+void ExecSR(int code, int arg);
+void SignalSR(int sig_num, int handler);
+void WrapperSR(int pid, int handler, int arg);
+
 
 #endif
