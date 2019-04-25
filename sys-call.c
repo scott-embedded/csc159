@@ -190,3 +190,36 @@ void SignalCall(int sig_num, int handler) {
      : "eax", "ebx"              // used registers
  	); 
 }
+
+void PauseCall(){
+   asm("int %1;             // interrupt!
+        movl %%eax, %0"     // after, copy eax to variable 'pid'
+       : "=g" (rand)         // output
+       : "g" (PAUSE_CALL)  // input
+       : "eax"              // used registers
+   );
+}
+
+void KillCall(int pid, int sig_num) {
+    asm("movl %0, %%eax;
+		movl %1, %%ebx;
+         int %2"     // after, copy eax to variable 'pid'
+     :         // output
+     : "g" (pid), "g" (sig_num), "g" (KILL_CALL)  // input
+     : "eax", "ebx"              // used registers
+ 	); 
+}
+
+
+int RandCall(void) {
+   int rand;
+
+   asm("int %1;             // interrupt!
+        movl %%eax, %0"     // after, copy eax to variable 'pid'
+       : "=g" (rand)         // output
+       : "g" (RAND_CALL)  // input
+       : "eax"              // used registers
+   );
+
+   return rand;
+}

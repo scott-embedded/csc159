@@ -14,6 +14,7 @@
 int run_pid;                        // current running PID; if -1, none selected
 int sys_centi_sec;                  // system time in centi-sec, initialize it 
 int vid_mux;
+int rand;
 q_t pid_q, ready_q, sleep_q, mux_q;        // sleeping proc PID's queued in here 
 pcb_t pcb[PROC_SIZE];               // Process Control Blocks
 char proc_stack[PROC_SIZE][PROC_STACK_SIZE];   // process runtime stacks
@@ -29,6 +30,7 @@ int page_user[PAGE_NUM];
 void InitKernelData(void) {         // init kernel data
    int i;
    sys_centi_sec = 0;        //CODING HINTS NMA
+   rand = 0;
       
    intr_table = get_idt_base();            // get intr table location
 
@@ -69,6 +71,9 @@ void InitKernelControl(void) {      // init kernel control
    fill_gate(&intr_table[EXIT_CALL], (int)ExitEntry, get_cs(), ACC_INTR_GATE, 0); 
    fill_gate(&intr_table[EXEC_CALL], (int)ExecEntry, get_cs(), ACC_INTR_GATE, 0);
    fill_gate(&intr_table[SIGNAL_CALL], (int)SignalEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[PAUSE_CALL], (int)PauseEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[KILL_CALL], (int)KillEntry, get_cs(), ACC_INTR_GATE, 0);
+   fill_gate(&intr_table[RAND_CALL], (int)RandEntry, get_cs(), ACC_INTR_GATE, 0);
    outportb(PIC_MASK, MASK);                   // mask out PIC for new entries
 }
 
@@ -146,6 +151,15 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
       case SIGNAL_CALL:
          SignalSR(trapframe_p->eax, trapframe_p->ebx);
          break;
+      case PAUSE_CALL:
+         PauseSR();
+         break;
+      case KILL_CALL:
+         KillSR(trapframe_p->eax, trapframe_p->ebx);
+         break;
+      case RAND_CALL:
+         trapframe_p->eax = RandSR();
+         break;
 	  default:		//error, we didn't catch something!
 	     breakpoint();
 		 break;
@@ -157,6 +171,9 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 		 breakpoint();  		// let's go to GDB
 	  }
       if (ch == 'n') {           // 'n' for new process
+        if(rand == 0){
+           rand = sys_centi_sec;
+        }
       	NewProcSR(UserProc);     // create a UserProc
 	}
 	

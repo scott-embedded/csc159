@@ -9,7 +9,9 @@
 #define WAIT_CALL 54
 #define EXIT_CALL 55
 #define GETPID_CALL 48
-
+#define PAUSE_CALL 58
+#define KILL_CALL 59
+#define RAND_CALL 60
 #define SHOWCHAR_CALL 49
 #define SLEEP_CALL 50
 #define MUX_CREATE_CALL 51
@@ -44,6 +46,10 @@
 #define PROC_SIZE 20        // max number of processes
 #define PROC_STACK_SIZE 4096     // process stack in bytes
 #define Q_SIZE 20           // queuing capacity
+
+#define SIGGO 4
+#define A_PRIME 6700417
+#define G2 2147483647
 
 #define VID_MASK 0x0f00     // foreground bright white, background black
 #define VID_HOME (unsigned short *)0xb8000 // home position, upper-left corner

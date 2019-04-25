@@ -36,6 +36,12 @@ void ExitEntry(void);
 void ExecEntry(void);
 
 void SignalEntry(void);
+
+void PauseEntry(void);
+
+void KillEntry(void);
+
+void RandEntry(void);
 __END_DECLS
 
 #endif // ifndef ASSEMBLER

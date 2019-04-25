@@ -22,6 +22,9 @@ void ExitSR(int code);
 void ExecSR(int code, int arg);
 void SignalSR(int sig_num, int handler);
 void WrapperSR(int pid, int handler, int arg);
+void PauseSR();
+void KillSR(int pid, int sig_num);
+int RandSR();
 
 
 #endif

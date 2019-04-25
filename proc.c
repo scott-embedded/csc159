@@ -60,12 +60,13 @@ void InitProc(void) {
 
 void UserProc(void) {
    int device;
-   int child, exit;
+   int child, exit, i;
    int my_pid = GetPidCall();  // get my PID
 
    char str1[STR_SIZE] = "PID    > ";         // <-------------------- new
    char str2[STR_SIZE];                       // <-------------------- new
    char str3[10] = "         ";
+   char str4[STR_SIZE] = "CHILD ALPHABET x ARRIVES";
 
    str1[4] = '0' + my_pid / 10;  // show my PID
    str1[5] = '0' + my_pid % 10;
@@ -80,37 +81,48 @@ void UserProc(void) {
       ReadCall(device, str2);   // read terminal input
       WriteCall(STDOUT, str2);  // show what input was to PC
 
-      if(StrCmp(str2, "fork") == FALSE){
+      if(StrCmp(str2, "race") == FALSE){
         continue;
       }
+
+      for(i=0; i < 5; i++){
 	  
-      child = ForkCall();
-	  // Error occured, we could not fork
-      if (child == NONE) {
-        WriteCall(STDOUT, "Couldn't fork!");
-      }
+     	 child = ForkCall();
+		  // Error occured, we could not fork
+      	if (child == NONE) {
+       	 WriteCall(STDOUT, "Couldn't fork!");
+      	}
 	  
-	  // Are we a child?
-      else if (child == 0) {
+		  // Are we a child?
+      	else if (child == 0) {
 		ExecCall((int)Aout, device);
 		cons_printf("Exited ExecCall successfully.... (wtf?)");
-        //Aout(device);
-      }
+        	//Aout(device);
+      	}
 	  
-	  // Otherwise we are a parent
-      else {	
-		Itoa(str3, child);					//Convert child PID to string & output
-        WriteCall(device, str3);	
-        WriteCall(device, "\n\r");
-		
+		  // Otherwise we are a parent
+      	else {	
+			Itoa(str3, child);					//Convert child PID to string & output
+        	WriteCall(device, str3);	
+        	WriteCall(device, "\n\r");
+	}
+     }
+
+     SleepCall(300);
+     KillCall(0,SIGGO);
+
+     for(i=0;i<5;i++){	
         exit = WaitCall();					//Wait on child
 		
 		Bzero(str3, sizeof(str3));			//Exit code into string & output
 	 	Itoa(str3, exit);
 		WriteCall(device, str3);
-        WriteCall(device, "\n\r");
+        	WriteCall(device, "\n\r");
+		str4[15] = exit/100+66;
+		WriteCall(device, str4);
+        	WriteCall(device, "\n\r");
 		Bzero(str3, sizeof(str3));
-      }
+     }
    }
 }
 
@@ -125,13 +137,14 @@ void Aout(int device){
 
   str[0] = '0' + my_pid / 10;  // show my PID
   str[1] = '0' + my_pid % 10;
-  str[4] = my_pid + 66;
+  str[4] = my_pid + 'A';
 
-  WriteCall(device, str);
+//  WriteCall(device, str);
+  PauseCall();
 
   for (i = 0; i < 69; i++) {
-    ShowCharCall(my_pid, i, my_pid + 66);
-    SleepCall(10);
+    ShowCharCall(my_pid, i, my_pid + 'A');
+    SleepCall(RandCall()%20+5);
     ShowCharCall(my_pid, i, ' ');
    }
    

@@ -15,4 +15,7 @@ void ExitCall(int code);
 void ReadCall(int device, char *str);
 void ExecCall(int code, int arg);
 void SignalCall(int sig_num, int handler);
+void PauseCall();
+void KillCall(int pid, int sig_num);
+int RandCall();
 #endif

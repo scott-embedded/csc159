@@ -7,7 +7,7 @@
 #include "k-sr.h"
 #include "sys-call.h"
 #include "spede/stdio.h"
-
+#include "proc.h"
 
 // to create a process: alloc PID, PCB, and process stack
 // build trapframe, initialize PCB, record PID to ready_q
@@ -164,8 +164,11 @@ void TermRxSR(int term_no) {
 	  	EnQ('\n', &term[term_no].echo_q);
 	  }
 	  
-      if (ch == '\r') {											//if char is CR -> enqueue NUL to the terminal in_q  
+      if (ch == '\r') {//if char is CR -> enqueue NUL to the terminal in_q  
       	EnQ('\0', &term[term_no].in_q);
+      }
+      else{ //else -> enqueue char to the terminal in_q
+		  EnQ(ch, &term[term_no].in_q);
       }
 	  
 	  //when all three below are true:
@@ -195,9 +198,6 @@ void TermRxSR(int term_no) {
 		  }	  
 	  }
 	  								
-      else	{													//else -> enqueue char to the terminal in_q
-		  EnQ(ch, &term[term_no].in_q);
-	  }
 	  
 	  
       MuxOpSR(term[term_no].in_mux, UNLOCK); 					//unlock the terminal in_mux
@@ -424,37 +424,47 @@ void WrapperSR(int pid, int handler, int arg) {
    int *p;	//track our position
    trapframe_t temp_trap;
    temp_trap = *pcb[pid].trapframe_p;
-   
-   cons_printf("p = %X\n", p); 
-   
    //cons_printf("entered WrapperSR...\n");
    //Lower the trapframe address by the size of 3 integers.
-   p = (int*)pcb[pid].trapframe_p;
-   cons_printf("p = %X\n", p);
    //Fill the space of the vacated 3 integers with (from top):
-   //   'arg' (2nd arg to Wrapper)
    //   'handler' (1st arg to Wrapper)
    //   'eip' in the original trapframe (UserProc resumes)
    //   (Below them is the original trapframe.)
-   p--;
-   *p = arg;										//decrement pointer and then assign variable
-cons_printf("p = %X\n", p);
-cons_printf("*p = %X\n", *p);   
+   //   'arg' (2nd arg to Wrapper)
+   //decrement pointer and then assign variable
+   //decrement pointer and then assign variable
+   //decrement pointer and then assign variable (Change eip in the trapframe to Wrapper to run it 1st.)
+   //Change trapframe location info in the PCB of this pid.
+   pcb[pid].trapframe_p->efl=arg;
+   pcb[pid].trapframe_p->cs=handler;
+   
+   (int*)pcb[pid].trapframe_p -=3;
 
-   p--;
-   *p = handler;									//decrement pointer and then assign variable
- cons_printf("p = %X\n", p);
-cons_printf("*p = %X\n", *p);
-  
-   p--;
-   *p = temp_trap.eip;			//decrement pointer and then assign variable (Change eip in the trapframe to Wrapper to run it 1st.)
-cons_printf("p = %X\n", p);
-cons_printf("*p = %X\n", *p);
-
-   pcb[pid].trapframe_p = (trapframe_t*)p;		//Change trapframe location info in the PCB of this pid.
    *pcb[pid].trapframe_p = temp_trap;
-cons_printf("pcb[pid].tf = %X\n", pcb[pid].trapframe_p);
-    
-   //cons_printf("Leaving WrapperSR...\n");
-  
+   pcb[pid].trapframe_p->eip = (int) Wrapper;
 }
+
+void PauseSR(){
+   pcb[run_pid].state = PAUSE;
+   run_pid= NONE;  
+}
+
+void KillSR(int pid, int sig_num){
+   int i;
+
+   if(pid == 0){
+      for(i = 0; i < PROC_SIZE; i++){
+         if(pcb[i].ppid == run_pid && pcb[i].state == PAUSE){
+	    pcb[i].state = READY;
+            EnQ(i, &ready_q);
+         }
+      }
+   }
+}
+
+int RandSR(){
+
+   rand = run_pid * rand + A_PRIME;
+   rand %= G2;
+   return rand;
+}   
