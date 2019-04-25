@@ -371,7 +371,6 @@ void SignalSR(int sig_num, int handler) {
 }
 
 void WrapperSR(int pid, int handler, int arg) {
-   int *p;	//track our position
    trapframe_t temp_trap;
    temp_trap = *pcb[pid].trapframe_p;
 
