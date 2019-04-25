@@ -119,8 +119,7 @@ void Aout(int device){
   int my_pid;
   int i;
   
-  char str[STR_SIZE] = "xx ( ) Hello, World!\n\r";
-  cons_printf("Entering Aout....");
+  char str[] = "xx ( ) Hello, World!\n\r";
   my_pid = GetPidCall();
 
 
@@ -130,12 +129,14 @@ void Aout(int device){
 
   WriteCall(device, str);
 
-  for (i = 0; i < 70; i++) {
+  for (i = 0; i < 69; i++) {
     ShowCharCall(my_pid, i, my_pid + 66);
     SleepCall(10);
     ShowCharCall(my_pid, i, ' ');
    }
+   
   ExitCall(my_pid * 100);
+  
 }
 
 void Ouch(int device) {
