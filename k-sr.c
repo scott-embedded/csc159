@@ -177,22 +177,17 @@ void TermRxSR(int term_no) {
       //3. the suspended process has a sigint_handler in its PCB
 	  
 	  if (ch == 3)  {	//CTRL+C is ascii 3 (1st condition)
-		  cons_printf("ctrl + c captured\n");
 		  if (QisEmpty(&mux[term[term_no].in_mux].suspend_q)) {
-			  cons_printf("suspend_q was empty... returning\n");
 			  return; //2nd condition does not hold true, return	
 		  }
 		  
 		  process = mux[term[term_no].in_mux].suspend_q.q[0];	
-		  cons_printf("assigned process #%i\n", process);
 		  if (pcb[process].sigint_handler) {		//(check 3rd condition)
-			  cons_printf("sigint_handler detected\n");
 			  //WrapperSR is called with 3 arguments:
 			  //a. the suspended pid (read it, but do not dequeued it from suspend_q)
 			  //b. the sigint_handler of the pid
 			  //c. the current device (TERM0_INTR/TERM1_INTR, depending on term_no)
 			  device = term_no == 0 ? TERM0_INTR : TERM1_INTR;	//determine device 
-			  cons_printf("calling wrapper...\n");
 			  WrapperSR(process, pcb[process].sigint_handler, device);
 			  
 		  }	  
@@ -327,14 +322,8 @@ void ExecSR(int code, int arg) {
 	char *code_page_addr;
 	char *stack_page_addr;
 		
-	
-	//cons_printf("entered ExecSR\n");
-	
 	page_cnt = 0;	// track # of pages we assigned
 
-   	//1. Allocate two DRAM pages, one for code, one for stack space:
-   	//   loop thru page_user[] for two pages that are currently used
-   	//   by NONE. Once found, set their user to run_pid.
     for (i = 0; i < PAGE_NUM; i++) {
     	if (page_user[i] == NONE) {
     		page_user[i] = run_pid;		//set page to current run_pid
@@ -351,90 +340,41 @@ void ExecSR(int code, int arg) {
 			
     }  		
 	
-	//2. To calcuate page address = i * PAGE_SIZE + where DRAM begins,
-   	//   where i is the index of the array page_user[]
+
 	code_page_addr = (char*)(page1 * PAGE_SIZE + RAM);
 	stack_page_addr = (char*)(page2 * PAGE_SIZE + RAM);
-	//cons_printf("Base Address: %X\n", RAM);
-	//cons_printf("Code Address: %X\n", code_page_addr);
-	//cons_printf("Stack Address: %X\n", stack_page_addr);
 
-    	
-	//3. Copy PAGE_SIZE bytes from 'code' to the allocated code page,
-   	//   with your own MemCpy().
 	MemCpy(code_page_addr, (char*)code, PAGE_SIZE);
 
-	//4. Bzero the allocated stack page.
-        Bzero(stack_page_addr, PAGE_SIZE);
+    Bzero(stack_page_addr, PAGE_SIZE);
 	
-	//5. From the top of the stack page, copy 'arg' there. 
 	stack_page_addr += PAGE_SIZE;	//move pointer to top of stack (sub 4 to be in last int position at top of our stack)
 	stack_page_addr -= 4;
-	*stack_page_addr = arg;								//copy arg over
-	//cons_printf("\nStack Address: %X\n", stack_page_addr);
-	//cons_printf("Stack Address = %i\n", *stack_page_addr);
-	//MemCpy(stack_page_addr, (char*)&arg, sizeof(int)); 
-	    	
-	//6. Skip a whole 4 bytes (return address, size of an integer).
-	//cons_printf("Decrement Stack Address one int...\n");
+	*stack_page_addr = arg;			//copy arg over
+
 	stack_page_addr -= 4;
-	//cons_printf("Stack Address: %X\n", stack_page_addr);
-	//cons_printf("Decrement Stack Address one tf...\n");
-	//cons_printf("	sizeof tf = %i\n", sizeof(trapframe_t));
-	//stack_page_addr -= sizeof(trapframe_t);
-	//cons_printf("Stack Address: %X\n", stack_page_addr);
-	
 
-	//tf_loc = (int)pcb[run_pid].trapframe_p;
-	
-	//MemCpy(stack_page_addr, (char*)pcb[run_pid].trapframe_p, sizeof(trapframe_t));
-	
-	
-
-	//7. Lower the trapframe address in PCB of run_pid by the size of
-   	//   two integers.
-			//pcb[run_pid].trapframe_p = (trapframe_t*)( stack_page_addr - 8);	//removed this because we are already decrementing this pointer!
 	pcb[run_pid].trapframe_p = (trapframe_t*)( stack_page_addr);	//set TF to correct position
 	pcb[run_pid].trapframe_p--;
-	//cons_printf("Set run_pid tf to Address: %X\n", (trapframe_t*)( stack_page_addr));
-	
-	//8. Decrement the trapframe pointer by 1 (one whole trapframe).
-			//this moves the TF pointer to the bottom of the TF
-	
-	//9. Use the trapframe pointer to set efl and cs (as in NewProcSR)
+
 	pcb[run_pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
-        pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
+    pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
 	
-	//10. However, set the eip to the start of the new code page.
-	pcb[run_pid].trapframe_p->eip = (int)code_page_addr;                        // set to code
+	pcb[run_pid].trapframe_p->eip = (int)code_page_addr;      // set to code
 	
-	//cons_printf("exiting ExecSR...\n");
 	
 }
    
 void SignalSR(int sig_num, int handler) {
-	//cons_printf("entered SignerSR...\n");
     pcb[run_pid].sigint_handler = handler; //Just set sigint_handler in PCB of run_pid to handler.
-   	//cons_printf("leaving SignalSR...\n");
-      //The sig_num will be used in the next phase to differ
-      //for different signals.
+
 }
 
 void WrapperSR(int pid, int handler, int arg) {
    int *p;	//track our position
    trapframe_t temp_trap;
    temp_trap = *pcb[pid].trapframe_p;
-   //cons_printf("entered WrapperSR...\n");
-   //Lower the trapframe address by the size of 3 integers.
-   //Fill the space of the vacated 3 integers with (from top):
-   //   'handler' (1st arg to Wrapper)
-   //   'eip' in the original trapframe (UserProc resumes)
-   //   (Below them is the original trapframe.)
-   //   'arg' (2nd arg to Wrapper)
-   //decrement pointer and then assign variable
-   //decrement pointer and then assign variable
-   //decrement pointer and then assign variable (Change eip in the trapframe to Wrapper to run it 1st.)
-   //Change trapframe location info in the PCB of this pid.
+
    pcb[pid].trapframe_p->efl=arg;
    pcb[pid].trapframe_p->cs=handler;
    
