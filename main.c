@@ -183,7 +183,7 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 	
    }
    Scheduler();    //may need to pick another proc 
-   set_cr3(cb[run_pid].main_table);
+   set_cr3(pcb[run_pid].main_table);
    Loader(pcb[run_pid].trapframe_p); //load the selected proc
 }
 
