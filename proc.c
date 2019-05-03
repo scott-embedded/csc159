@@ -74,7 +74,7 @@ void UserProc(void) {
    device = my_pid % 2 == 1 ? TERM0_INTR : TERM1_INTR;
    //cons_printf("first calculation device = %i\n", device);
 
-   SignalCall(SIGINT, Ouch);
+   SignalCall(SIGINT, (int)Ouch);
    
    while(1) {
       WriteCall(device, str1);  // prompt for terminal input
@@ -118,7 +118,7 @@ void UserProc(void) {
 	 	Itoa(str3, exit);
 		WriteCall(device, str3);
         	WriteCall(device, "\n\r");
-		str4[15] = exit/100+66;
+		str4[15] = exit/100+'A';
 		WriteCall(device, str4);
         	WriteCall(device, "\n\r");
 		Bzero(str3, sizeof(str3));
@@ -139,12 +139,12 @@ void Aout(int device){
   str[1] = '0' + my_pid % 10;
   str[4] = my_pid + 'A';
 
-	//  WriteCall(device, str);
+//  WriteCall(device, str);
   PauseCall();
 
   for (i = 0; i < 69; i++) {
     ShowCharCall(my_pid, i, my_pid + 'A');
-    SleepCall(RandCall() % 20 + 5);
+    SleepCall(RandCall()%20+5);
     ShowCharCall(my_pid, i, ' ');
    }
    

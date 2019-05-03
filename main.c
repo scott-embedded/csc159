@@ -27,12 +27,10 @@ term_t term[TERM_SIZE] = {
 int page_user[PAGE_NUM];
 int kernel_main_table;
 
-
 void InitKernelData(void) {         // init kernel data
    int i;
    sys_centi_sec = 0;        //CODING HINTS NMA
    rand = 0;
-   
       
    intr_table = get_idt_base();            // get intr table location
 

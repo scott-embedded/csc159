@@ -28,15 +28,13 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
 	   EnQ(pid, &ready_q);
    }
 
-	// point trapframe_p to stack & fill it out
+// point trapframe_p to stack & fill it out
    pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE];	//Give the process a place to live on the stack
    pcb[pid].trapframe_p--;
    pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr by setting bit 9 of EFLAGS reg to 1 (Interrupt Enable Flag IF)
    pcb[pid].trapframe_p->cs = get_cs();                  // dupl from CPU
    pcb[pid].trapframe_p->eip = (int)p;                        // set to code
-   
-   pcb[pid].main_table = kernel_main_table;                        
-   
+   pcb[pid].main_table = kernel_main_table;
 }
 
 // count run_count and switch if hitting time slice
@@ -238,6 +236,7 @@ int ForkSR(void) {
 	    p = (int*)*p;						//      2. set p to the adjusted value (need a typecast)
 	}   
 
+	pcb[c_pid].main_table = kernel_main_table;
 	return c_pid;      				//n. return child PID
 }
 
@@ -250,7 +249,6 @@ int WaitSR(void) {
 	int page_cnt;
 	match = -1;
 	
-		
 	for (i = 0; i < PROC_SIZE; i++) {								// loop thru the PCB array (looking for a ZOMBIE child):
 		if (pcb[i].ppid == run_pid && pcb[i].state == ZOMBIE) {		// the proc pid is run_pid and the state is ZOMBIE -> break the loop
 			match = i;
@@ -267,7 +265,7 @@ int WaitSR(void) {
 	else {
 		set_cr3(pcb[match].main_table);
 		exit_code = pcb[match].trapframe_p->eax;		//get its exit code (from the eax of the child's trapframe)
-		set_cr3(pcb[run_pid].main_table);				
+		set_cr3(pcb[run_pid].main_table);
 														//reclaim child's resources: 
         pcb[match].state = UNUSED;						//1. alter its state to ... 
         EnQ(match, &pid_q);    							//2. enqueue its PID to ...
@@ -289,10 +287,9 @@ int WaitSR(void) {
 }
 
 
-void ExitSR(int code) { 
+void ExitSR (int code) { 
   int page_cnt, i;
   int ppid = pcb[run_pid].ppid;
-	  
   if (pcb[ppid].state != WAIT) {			//if the process state of my parent (ppid) is not WAIT:
     pcb[run_pid].state = ZOMBIE;			//1. alter my state to ...
     run_pid = NONE;							//2. reset run_pid to ...
@@ -317,6 +314,7 @@ void ExitSR(int code) {
 		break;
 	}	
   } 
+  
   set_cr3(kernel_main_table);
  
 }
@@ -328,7 +326,6 @@ void ExecSR(int code, int arg) {
     int i, j, pages[5], *p, entry, page_cnt;
     trapframe_t *q;
     enum {MAIN_TABLE, CODE_TABLE, STACK_TABLE, CODE_PAGE, STACK_PAGE};
-	
 	
 	//1. allocate 5 RAM pages by
 	//loop page_user array, find each, put index in pages[5]
@@ -376,7 +373,6 @@ void ExecSR(int code, int arg) {
 	//      b. lower q (by one whole trapframe_t space)
 	//      c. set q->efl and q->cs as before
 	//      d. but set q->eip to virtual addr, the constant M256
-	stack_page_addr = pages[STACK_PAGE] * PAGE_SIZE + RAM;
     Bzero((char*)pages[STACK_PAGE], PAGE_SIZE);
 	p = (int*)(pages[STACK_PAGE] + PAGE_SIZE - 1);
 	*p = arg;
@@ -438,7 +434,6 @@ void SignalSR(int sig_num, int handler) {
 }
 
 void WrapperSR(int pid, int handler, int arg) {
-   int *p;	//track our position
    trapframe_t temp_trap;
    temp_trap = *pcb[pid].trapframe_p;
 
