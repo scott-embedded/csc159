@@ -326,8 +326,6 @@ void ExitSR(int code) {
 
 void ExecSR(int code, int arg) {
     int i, j, pages[5], *p, entry, page_cnt;
-	int code_page_addr;
-	int stack_page_addr;
     trapframe_t *q;
     enum {MAIN_TABLE, CODE_TABLE, STACK_TABLE, CODE_PAGE, STACK_PAGE};
 	
@@ -383,12 +381,11 @@ void ExecSR(int code, int arg) {
 	p = (int*)(pages[STACK_PAGE] + PAGE_SIZE - 1);
 	*p = arg;
 	p--;
-	
 	q = (trapframe_t*)p;
 	q--;
-	q ->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
-   	q ->cs = get_cs();                  //set CS
-	q ->eip = M256;      // set to code
+	q->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
+   	q->cs = get_cs();                  //set CS
+	q->eip = M256;      // set to code
 	
 	
 	//4. build addr-trans main table
@@ -400,7 +397,8 @@ void ExecSR(int code, int arg) {
 	//   E. get entry # from leftmost 10 bits in virtual addr G1_1 (or V_TF, same)
 	//   F. set the content of this entry to the addr of stack table bitwise-OR-ed with
 	//      the PRESENT and RW flags
-    Bzero((char*)&pages[MAIN_TABLE], PAGE_SIZE);
+    Bzero((char*)pages[MAIN_TABLE], PAGE_SIZE);
+	MemCpy((char*)pages[MAIN_TABLE], (char*)kernel_main_table, sizeof(int) * 4);
 	entry = M256 >> 22;	
 	*((int*)pages[MAIN_TABLE] + entry) = pages[CODE_TABLE] | PRESENT | RW;
 	entry = G1_1 >> 22; 
@@ -411,10 +409,8 @@ void ExecSR(int code, int arg) {
 	//   B. get entry # = bits 11~20 from left (2nd 10 bits) in virtual addr M256 (use MASK10)
 	//   C. set the content of this entry to the addr of code page bitwise-OR-ed with
 	//      the PRESENT and RW flags
-    Bzero((char*)&pages[CODE_TABLE], PAGE_SIZE);
+    Bzero((char*)pages[CODE_TABLE], PAGE_SIZE);
 	entry = M256 & MASK10 >> 12;
-	p = entry;
-	*p = code_page_addr | PRESENT | RW;
 	*((int*)pages[CODE_TABLE] + entry) = pages[CODE_PAGE] | PRESENT | RW;
 	
 	
@@ -423,7 +419,7 @@ void ExecSR(int code, int arg) {
 	//   B. get entry # = bits 11~20 from left (2nd 10 bits) in virtual addr G1_1 (use MASK10)
 	//   C. set the content of this entry to the addr of stack page bitwise-OR-ed with
 	//      the PRESENT and RW flags
-    Bzero((char*)&pages[STACK_TABLE], PAGE_SIZE);
+    Bzero((char*)pages[STACK_TABLE], PAGE_SIZE);
 	entry = G1_1 & MASK10 >> 12;
 	*((int*)pages[STACK_TABLE] + entry) = pages[STACK_PAGE] | PRESENT | RW;
 	
@@ -435,55 +431,6 @@ void ExecSR(int code, int arg) {
 	
 }
 
-/*
-//Original ExecSR, leaving here for now until transition to new ExecSr is complete
-void ExecSR(int code, int arg) {
-	int i, page1, page2, page_cnt;
-	char *code_page_addr;
-	char *stack_page_addr;
-		
-	page_cnt = 0;	// track # of pages we assigned
-
-    for (i = 0; i < PAGE_NUM; i++) {
-    	if (page_user[i] == NONE) {
-    		page_user[i] = run_pid;		//set page to current run_pid
-			page_cnt++;
-    	}
-		
-		if (page_cnt == 1) {
-			page1 = i;	//remember the index of the page we set (code space)
-		}	
-		else if (page_cnt == 2) {	
-			page2 = i;	//remember the index of the page we set (stack space)
-			break;		//we assigned two pages, break out of for loop
-		}
-			
-    }  		
-	
-
-	code_page_addr = (char*)(page1 * PAGE_SIZE + RAM);
-	stack_page_addr = (char*)(page2 * PAGE_SIZE + RAM);
-
-	MemCpy(code_page_addr, (char*)code, PAGE_SIZE);
-
-    Bzero(stack_page_addr, PAGE_SIZE);
-	
-	stack_page_addr += PAGE_SIZE;	//move pointer to top of stack (sub 4 to be in last int position at top of our stack)
-	stack_page_addr -= 4;
-	*stack_page_addr = arg;			//copy arg over
-
-	stack_page_addr -= 4;
-
-	pcb[run_pid].trapframe_p = (trapframe_t*)( stack_page_addr);	//set TF to correct position
-	pcb[run_pid].trapframe_p--;
-
-	pcb[run_pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
-    pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
-	
-	pcb[run_pid].trapframe_p->eip = (int)code_page_addr;      // set to code
-	
-	
-}*/
    
 void SignalSR(int sig_num, int handler) {
     pcb[run_pid].sigint_handler = handler; //Just set sigint_handler in PCB of run_pid to handler.
