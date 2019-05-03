@@ -343,19 +343,19 @@ void ExecSR(int code, int arg) {
 			page_cnt++;
     	}
 		
-		if (page_cnt == 4) {
+		if (page_cnt == 5) {
 			break;	//we assigned 5 pages, break out of the loop
 		}	
 		
     }  	
-	if (page_cnt < 4) {	//check to make sure we allocated 5 pages
+	if (page_cnt < 5) {	//check to make sure we allocated 5 pages
 		cons_printf("Panic: could not allocate 5 pages!\n");
 		breakpoint();
 	}
 	
 	//compute addresses
 	for (i = 0; i < 5; i++) {
-		pages[i] = pages[i] * PAGE_SIZE + RAM;
+		pages[i] = (pages[i] * PAGE_SIZE) + RAM;
 	}
 	
 	
@@ -366,7 +366,10 @@ void ExecSR(int code, int arg) {
 	
 	//3. build stack page (addr is pages[STACK_PAGE])
 	//   A. Bzero it
-	//   B. put arg on top (set p, lower it, and write to where it points)
+	//   B. put arg on top 
+		//(set p, 
+		//lower it, 
+		//and write to where it points)
 	//   C. skip 4 bytes (not used, just lower p)
 	//   D. build trapframe by
 	//      a. set q to p (needs typecasting of course)
@@ -374,7 +377,8 @@ void ExecSR(int code, int arg) {
 	//      c. set q->efl and q->cs as before
 	//      d. but set q->eip to virtual addr, the constant M256
     Bzero((char*)pages[STACK_PAGE], PAGE_SIZE);
-	p = (int*)(pages[STACK_PAGE] + PAGE_SIZE - 1);
+	p = (int*)(pages[STACK_PAGE] + PAGE_SIZE);
+	p--;
 	*p = arg;
 	p--;
 	q = (trapframe_t*)p;
@@ -395,11 +399,12 @@ void ExecSR(int code, int arg) {
 	//      the PRESENT and RW flags
     Bzero((char*)pages[MAIN_TABLE], PAGE_SIZE);
 	MemCpy((char*)pages[MAIN_TABLE], (char*)kernel_main_table, sizeof(int) * 4);
-	entry = M256 >> 22;	
+	entry = M256 >> 22;	//move the 10 bits over in order to get the index position
 	*((int*)pages[MAIN_TABLE] + entry) = pages[CODE_TABLE] | PRESENT | RW;
 	entry = G1_1 >> 22; 
 	*((int*)pages[MAIN_TABLE] + entry) = pages[STACK_TABLE] | PRESENT | RW;
-	
+
+
 	//5. build code table (subtable)
 	//   A. Bzero it
 	//   B. get entry # = bits 11~20 from left (2nd 10 bits) in virtual addr M256 (use MASK10)
