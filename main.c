@@ -25,12 +25,15 @@ term_t term[TERM_SIZE] = {
 	{ TRUE, TERM1_IO_BASE }
 }; 
 int page_user[PAGE_NUM];
+int kernel_main_table;
 
 
 void InitKernelData(void) {         // init kernel data
    int i;
    sys_centi_sec = 0;        //CODING HINTS NMA
    rand = 0;
+   
+   kernel_main_table = get_cr3();
       
    intr_table = get_idt_base();            // get intr table location
 
@@ -99,6 +102,7 @@ int main(void) {
 
    NewProcSR(InitProc);  // create InitProc
    Scheduler();
+   set_cr3(pcb[run_pid].main_table);
    Loader(pcb[run_pid].trapframe_p); // load/run it
    
    return 0; // statement never reached, compiler asks it for syntax
@@ -179,7 +183,7 @@ void Kernel(trapframe_t *trapframe_p) {           // kernel runs
 	
    }
    Scheduler();    //may need to pick another proc 
-   
+   set_cr3(cb[run_pid].main_table);
    Loader(pcb[run_pid].trapframe_p); //load the selected proc
 }
 

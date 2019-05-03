@@ -35,6 +35,7 @@ typedef struct {
    int wake_centi_sec;
    int ppid;
    int sigint_handler;
+   int main_table;
 } pcb_t;                     
 
 typedef struct {             // generic queue type

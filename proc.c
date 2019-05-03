@@ -139,12 +139,12 @@ void Aout(int device){
   str[1] = '0' + my_pid % 10;
   str[4] = my_pid + 'A';
 
-//  WriteCall(device, str);
+	//  WriteCall(device, str);
   PauseCall();
 
   for (i = 0; i < 69; i++) {
     ShowCharCall(my_pid, i, my_pid + 'A');
-    SleepCall(RandCall()%20+5);
+    SleepCall(RandCall() % 20 + 5);
     ShowCharCall(my_pid, i, ' ');
    }
    

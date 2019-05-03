@@ -18,6 +18,7 @@ extern mux_t mux[MUX_SIZE];				//kernel has these mutexes to spar
 extern term_t term[TERM_SIZE];
 extern int page_user[PAGE_NUM];
 extern int rand;
+extern int kernel_main_table;;
 
 #endif                         // endif of ifndef
 

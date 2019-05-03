@@ -34,6 +34,7 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
    pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr by setting bit 9 of EFLAGS reg to 1 (Interrupt Enable Flag IF)
    pcb[pid].trapframe_p->cs = get_cs();                  // dupl from CPU
    pcb[pid].trapframe_p->eip = (int)p;                        // set to code
+   pcb[pid].trapframe_p->main_table = kernel_main_table;                        // set to code
    
 }
 
@@ -248,6 +249,7 @@ int WaitSR(void) {
 	int page_cnt;
 	match = -1;
 	
+		
 	for (i = 0; i < PROC_SIZE; i++) {								// loop thru the PCB array (looking for a ZOMBIE child):
 		if (pcb[i].ppid == run_pid && pcb[i].state == ZOMBIE) {		// the proc pid is run_pid and the state is ZOMBIE -> break the loop
 			match = i;
@@ -262,7 +264,9 @@ int WaitSR(void) {
 	}
 	
 	else {
+		set_cr3(pcb[match].main_table);
 		exit_code = pcb[match].trapframe_p->eax;		//get its exit code (from the eax of the child's trapframe)
+		set_cr3(pcb[run_pid].main_table);				
 														//reclaim child's resources: 
         pcb[match].state = UNUSED;						//1. alter its state to ... 
         EnQ(match, &pid_q);    							//2. enqueue its PID to ...
@@ -287,6 +291,8 @@ int WaitSR(void) {
 void ExitSR (int code) { 
   int page_cnt, i;
   int ppid = pcb[run_pid].ppid;
+  set_cr3(kernel_main_table);
+	  
   if (pcb[ppid].state != WAIT) {			//if the process state of my parent (ppid) is not WAIT:
     pcb[run_pid].state = ZOMBIE;			//1. alter my state to ...
     run_pid = NONE;							//2. reset run_pid to ...
@@ -316,7 +322,111 @@ void ExitSR (int code) {
 
 
 
+void ExecSR(int code, int arg) {
+    int i, j, pages[5], *p, entry, page_cnt;
+    trapframe_t *q;
+    enum {MAIN_TABLE, CODE_TABLE, STACK_TABLE, CODE_PAGE, STACK_PAGE};
+	
+	
+	//1. allocate 5 RAM pages by
+	//loop page_user array, find each, put index in pages[5]
+	//if not getting 5 indices -> show Panic msg, return
+	//set page_user[] to so they're now used by run_pid
+	//calculate their addresses (put in/re-use pages[] which had indices)	
+	j = 0;
+	page_cnt = 0;
+    for (i = 0; i < PAGE_NUM; i++) {
+		
+    	if (page_user[i] == NONE) {
+    		pages[j] = i;									
+			page_user[i] = run_pid;			//set page to current run_pid
+			j++;
+			page_cnt++;
+    	}
+		
+		if (page_cnt == 4) {
+			break;	//we assigned 5 pages, break out of the loop
+		}	
+		
+    }  	
+	if (page_cnt < 4) {	//check to make sure we allocated 5 pages
+		cons_printf("Panic: could not allocate 5 pages!\n");
+		breakpoint();
+	}
+	
+	
+	//2.build code page (use addr already calculated in pages[CODE_PAGE])
+	//   (call MemCpy to copy from code similar to as before)
+	code_page_addr = (char*)(pages[CODE_PAGE] * PAGE_SIZE + RAM);
+	MemCpy(code_page_addr, (char*)code, PAGE_SIZE);
+	
+	
+	//3. build stack page (addr is pages[STACK_PAGE])
+	//   A. Bzero it
+	//   B. put arg on top (set p, lower it, and write to where it points)
+	//   C. skip 4 bytes (not used, just lower p)
+	//   D. build trapframe by
+	//      a. set q to p (needs typecasting of course)
+	//      b. lower q (by one whole trapframe_t space)
+	//      c. set q->efl and q->cs as before
+	//      d. but set q->eip to virtual addr, the constant M256
+	stack_page_addr = (char*)(pages[STACK_PAGE] * PAGE_SIZE + RAM);
+    Bzero(stack_page_addr, PAGE_SIZE);
+	p = stack_page_addr - 1;
+	*p = arg;
+	p--;
+	
+	pcb[run_pid].trapframe_p = (trapframe_t*)( p );	//set TF to correct position
+	pcb[run_pid].trapframe_p--;
+	pcb[run_pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
+    pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
+	pcb[run_pid].trapframe_p->eip = M256;      // set to code
+	
+	
+	//4. build addr-trans main table
+	//   A. Bzero it
+	//   B. MemCpy from kernel_main_table to duplicate the 1st 4 entries (each size int)
+	//   C. get entry # = leftmost 10 bits in virtual addr M256
+	//   D. set the content of this entry to the addr of code table bitwise-OR-ed with
+	//      the PRESENT and RW flags
+	//   E. get entry # from leftmost 10 bits in virtual addr G1_1 (or V_TF, same)
+	//   F. set the content of this entry to the addr of stack table bitwise-OR-ed with
+	//      the PRESENT and RW flags
+    Bzero(pages[MAIN_TABLE], PAGE_SIZE));
+	entry = M256 & 0xFFC00000;	//preserve these in their original location?
+	*entry = code_page_addr | PRESENT | RW;
+	entry = G1_1 & 0xFFC00000; //preserve these in their original location?
+	*entry = stack_page_addr | PRESENT | RW;
+	
+	//5. build code table (subtable)
+	//   A. Bzero it
+	//   B. get entry # = bits 11~20 from left (2nd 10 bits) in virtual addr M256 (use MASK10)
+	//   C. set the content of this entry to the addr of code page bitwise-OR-ed with
+	//      the PRESENT and RW flags
+    Bzero(pages[CODE_TABLE], PAGE_SIZE));
+	entry = M256 & MASK10;
+	*entry = code_page_addr | PRESENT | RW;
+	
+	
+	//6. build stack table (subtable)
+	//   A. Bzero it
+	//   B. get entry # = bits 11~20 from left (2nd 10 bits) in virtual addr G1_1 (use MASK10)
+	//   C. set the content of this entry to the addr of stack page bitwise-OR-ed with
+	//      the PRESENT and RW flags
+    Bzero(pages[STACK_TABLE], PAGE_SIZE));
+	entry = G1_1 & MASK10;
+	*entry = stack_page_addr | PRESENT | RW;
+	
+	
+	//7. set the main_table in the PCB of run_pid to the addr of the main table
+	//   set the trapframe_p in the PCB of run_pid to V_TF (typecast of course)
+	pcb[run_pid].main_table = pages[MAIN_TABLE];
+	pcb[run_pid].trapframe_p = (trapframe_t*) V_TF;
+	
+}
 
+/*
+//Original ExecSR, leaving here for now until transition to new ExecSr is complete
 void ExecSR(int code, int arg) {
 	int i, page1, page2, page_cnt;
 	char *code_page_addr;
@@ -363,7 +473,7 @@ void ExecSR(int code, int arg) {
 	pcb[run_pid].trapframe_p->eip = (int)code_page_addr;      // set to code
 	
 	
-}
+}*/
    
 void SignalSR(int sig_num, int handler) {
     pcb[run_pid].sigint_handler = handler; //Just set sigint_handler in PCB of run_pid to handler.
