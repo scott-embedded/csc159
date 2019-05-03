@@ -33,7 +33,6 @@ void InitKernelData(void) {         // init kernel data
    sys_centi_sec = 0;        //CODING HINTS NMA
    rand = 0;
    
-   kernel_main_table = get_cr3();
       
    intr_table = get_idt_base();            // get intr table location
 
@@ -58,6 +57,7 @@ void InitKernelData(void) {         // init kernel data
    }
    
    run_pid = NONE; 		//set run_pid to NONE
+   kernel_main_table = get_cr3();
 }
 
 void InitKernelControl(void) {      // init kernel control

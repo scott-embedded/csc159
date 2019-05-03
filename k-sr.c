@@ -28,7 +28,7 @@ void NewProcSR(func_p_t p) {  // arg: where process code starts
 	   EnQ(pid, &ready_q);
    }
 
-// point trapframe_p to stack & fill it out
+	// point trapframe_p to stack & fill it out
    pcb[pid].trapframe_p = (trapframe_t *)&proc_stack[pid][PROC_STACK_SIZE];	//Give the process a place to live on the stack
    pcb[pid].trapframe_p--;
    pcb[pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR; // enables intr by setting bit 9 of EFLAGS reg to 1 (Interrupt Enable Flag IF)
@@ -289,10 +289,9 @@ int WaitSR(void) {
 }
 
 
-void ExitSR (int code) { 
+void ExitSR(int code) { 
   int page_cnt, i;
   int ppid = pcb[run_pid].ppid;
-  set_cr3(kernel_main_table);
 	  
   if (pcb[ppid].state != WAIT) {			//if the process state of my parent (ppid) is not WAIT:
     pcb[run_pid].state = ZOMBIE;			//1. alter my state to ...
@@ -318,8 +317,10 @@ void ExitSR (int code) {
 		break;
 	}	
   } 
+  set_cr3(kernel_main_table);
  
 }
+
 
 
 
@@ -338,10 +339,10 @@ void ExecSR(int code, int arg) {
 	//calculate their addresses (put in/re-use pages[] which had indices)	
 	j = 0;
 	page_cnt = 0;
-    for (i = 0; i < PAGE_NUM; i++) {
-		
+    for (i = 0; i < PAGE_NUM; i++) {	//assign 5 indices
+			
     	if (page_user[i] == NONE) {
-    		pages[j] = i;									
+    		pages[j] = i;					//assign an index					
 			page_user[i] = run_pid;			//set page to current run_pid
 			j++;
 			page_cnt++;
@@ -357,11 +358,15 @@ void ExecSR(int code, int arg) {
 		breakpoint();
 	}
 	
+	//compute addresses
+	for (i = 0; i < 5; i++) {
+		pages[i] = pages[i] * PAGE_SIZE + RAM;
+	}
+	
 	
 	//2.build code page (use addr already calculated in pages[CODE_PAGE])
 	//   (call MemCpy to copy from code similar to as before)
-	code_page_addr = pages[CODE_PAGE] * PAGE_SIZE + RAM;
-	MemCpy((char*)code_page_addr, (char*)code, PAGE_SIZE);
+	MemCpy((char*)pages[CODE_PAGE], (char*)code, PAGE_SIZE);
 	
 	
 	//3. build stack page (addr is pages[STACK_PAGE])
@@ -374,16 +379,16 @@ void ExecSR(int code, int arg) {
 	//      c. set q->efl and q->cs as before
 	//      d. but set q->eip to virtual addr, the constant M256
 	stack_page_addr = pages[STACK_PAGE] * PAGE_SIZE + RAM;
-    Bzero((char*)stack_page_addr, PAGE_SIZE);
-	p =  (int*)(stack_page_addr - 1);
+    Bzero((char*)pages[STACK_PAGE], PAGE_SIZE);
+	p = (int*)(pages[STACK_PAGE] + PAGE_SIZE - 1);
 	*p = arg;
 	p--;
 	
-	pcb[run_pid].trapframe_p = (trapframe_t*)( p );	//set TF to correct position
-	pcb[run_pid].trapframe_p--;
-	pcb[run_pid].trapframe_p->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
-    pcb[run_pid].trapframe_p->cs = get_cs();                  //set CS
-	pcb[run_pid].trapframe_p->eip = M256;      // set to code
+	q = (trapframe_t*)p;
+	q--;
+	q ->efl = EF_DEFAULT_VALUE|EF_INTR;	//set EFLAGS
+   	q ->cs = get_cs();                  //set CS
+	q ->eip = M256;      // set to code
 	
 	
 	//4. build addr-trans main table
@@ -396,12 +401,10 @@ void ExecSR(int code, int arg) {
 	//   F. set the content of this entry to the addr of stack table bitwise-OR-ed with
 	//      the PRESENT and RW flags
     Bzero((char*)&pages[MAIN_TABLE], PAGE_SIZE);
-	entry = M256 & 0xFFC00000;	//preserve these in their original location?
-	p = (int*)entry;
-	*p = code_page_addr | PRESENT | RW;
-	entry = G1_1 & 0xFFC00000; //preserve these in their original location?
-	p = (int*)entry;
-	*p = stack_page_addr | PRESENT | RW;
+	entry = M256 >> 22;	
+	*((int*)pages[MAIN_TABLE] + entry) = pages[CODE_TABLE] | PRESENT | RW;
+	entry = G1_1 >> 22; 
+	*((int*)pages[MAIN_TABLE] + entry) = pages[STACK_TABLE] | PRESENT | RW;
 	
 	//5. build code table (subtable)
 	//   A. Bzero it
@@ -409,9 +412,10 @@ void ExecSR(int code, int arg) {
 	//   C. set the content of this entry to the addr of code page bitwise-OR-ed with
 	//      the PRESENT and RW flags
     Bzero((char*)&pages[CODE_TABLE], PAGE_SIZE);
-	entry = M256 & MASK10;
+	entry = M256 & MASK10 >> 12;
 	p = entry;
 	*p = code_page_addr | PRESENT | RW;
+	*((int*)pages[CODE_TABLE] + entry) = pages[CODE_PAGE] | PRESENT | RW;
 	
 	
 	//6. build stack table (subtable)
@@ -420,9 +424,8 @@ void ExecSR(int code, int arg) {
 	//   C. set the content of this entry to the addr of stack page bitwise-OR-ed with
 	//      the PRESENT and RW flags
     Bzero((char*)&pages[STACK_TABLE], PAGE_SIZE);
-	entry = G1_1 & MASK10;
-	p = entry;
-	*p = stack_page_addr | PRESENT | RW;
+	entry = G1_1 & MASK10 >> 12;
+	*((int*)pages[STACK_TABLE] + entry) = pages[STACK_PAGE] | PRESENT | RW;
 	
 	
 	//7. set the main_table in the PCB of run_pid to the addr of the main table
